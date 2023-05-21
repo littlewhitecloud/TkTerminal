@@ -61,6 +61,12 @@ class Terminal(Tk):
         if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1]
 
+        # If the command is clear or cls, clear the screen
+        if cmd in ["clear", "cls"]:
+            self.text.delete("1.0", "end")
+            self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
+            return "break"
+
         returnlines = popen(cmd)
         returnlines = returnlines.readlines()
 
