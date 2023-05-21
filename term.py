@@ -1,12 +1,24 @@
+from __future__ import annotations
+
 from os import getcwd, popen
+from platform import system
 from tkinter import Event, Text, Tk
+
+SYSTEM = system()
+
+command_inserts: dict[str, str] = {
+    "Windows": "PS {command}>",
+    "Linux": "{command}$",
+    "Darwin": "{command}$",
+}
 
 
 class Terminal(Tk):
     def __init__(self):
         Tk.__init__(self)
 
-        self.update()
+        self.withdraw()
+
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -19,10 +31,12 @@ class Terminal(Tk):
         self.text.pack(expand=True, fill="both")
         self.index = 1
 
-        self.text.insert("insert", f"PS {getcwd()}>")
+        self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
         self.text.bind("<KeyPress-Return>", self.loop)
+        self.resize()
+        self.deiconify()
 
-    def resize(self, _: Event):
+    def resize(self) -> None:
         """Detect the minimum size of the app, get the center of the screen, and place the app there."""
         # Update widgets so minimum size is accurate
         self.update_idletasks()
@@ -33,17 +47,19 @@ class Terminal(Tk):
 
         # Get center of screen based on minimum size
         x_coords = int(self.winfo_screenwidth() / 2 - minimum_width / 2)
-        y_coords = int(self.winfo_screenheight() / 2 - minimum_height / 2) - 20
-        # `-20` should deal with Dock on macOS and looks good on other OS's
+        y_coords = int(self.wm_maxsize()[1] / 2 - minimum_height / 2)
 
         # Place app and make the minimum size the actual minimum size (non-infringable)
         self.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
         self.wm_minsize(minimum_width, minimum_height)
 
-    def loop(self, _: Event):
+    def loop(self, _: Event) -> str:
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
-        cmd = cmd.split(">")[-1]
+        # Determine command based on system
+        cmd = cmd.split("$")[-1]  # Unix
+        if SYSTEM == "Windows":
+            cmd = cmd.split(">")[-1]
 
         returnlines = popen(cmd)
         returnlines = returnlines.readlines()
@@ -55,7 +71,7 @@ class Terminal(Tk):
             self.index += 1
 
         # Remove the next two lines that cause the extra newlines
-        self.text.insert("insert", f"PS {getcwd()}>")
+        self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
         return "break"  # Prevent the default newline character insertion
 
 
