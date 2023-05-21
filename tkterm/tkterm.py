@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from os import getcwd, popen
+from os import getcwd
+from subprocess import Popen, PIPE
 from platform import system
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame
 
+SYSTEM = system()
+if SYSTEM == "Windows":
+    from subprocess import CREATE_NEW_CONSOLE
 
 class Terminal(Frame):
-    SYSTEM = system()
 
     command_inserts: dict[str, str] = {
         "Windows": "PS {command}>",
@@ -32,7 +35,7 @@ class Terminal(Frame):
 
         self.text.insert(
             "insert",
-            f"{Terminal.command_inserts[Terminal.SYSTEM].format(command=getcwd())} ",
+            f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
         )
         self.text.bind("<Return>", self.loop, add=True)
 
@@ -41,7 +44,7 @@ class Terminal(Frame):
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
         cmd = cmd.split("$")[-1]  # Unix
-        if Terminal.SYSTEM == "Windows":
+        if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1]
 
         # If the command is clear or cls, clear the screen
@@ -49,14 +52,25 @@ class Terminal(Frame):
             self.text.delete("1.0", "end")
             self.text.insert(
                 "insert",
-                f"{Terminal.command_inserts[Terminal.SYSTEM].format(command=getcwd())} ",
+                f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
             )
             return "break"
 
-        returnlines = popen(
-            cmd
-        )  # Does not show errors, also runs in the terminal running the script
-        returnlines = returnlines.readlines()
+        process = Popen(
+            cmd,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+            text=True,
+            creationflags=CREATE_NEW_CONSOLE if SYSTEM == "Windows" else 0,
+        )
+        process.wait()
+        # Check if the command was successful
+        returncode = process.returncode
+        returnlines = process.stdout.readlines()
+        if returncode != 0:
+            returnlines = process.stderr.readlines()
 
         self.text.insert("insert", "\n")
         self.index += 1
@@ -66,7 +80,7 @@ class Terminal(Frame):
 
         self.text.insert(
             "insert",
-            f"{Terminal.command_inserts[Terminal.SYSTEM].format(command=getcwd())} ",
+            f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
         )
         return "break"  # Prevent the default newline character insertion
 
