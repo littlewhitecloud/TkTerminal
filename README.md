@@ -8,5 +8,5 @@
 ## MacOS
 <img src="images/macos.png" width="90%" align="center">
 
-#### Coming soon
+### Coming soon
 
