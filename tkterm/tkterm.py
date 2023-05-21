@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from os import getcwd
-from subprocess import Popen, PIPE
 from platform import system
+from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame
 
@@ -10,8 +10,8 @@ SYSTEM = system()
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
 
-class Terminal(Frame):
 
+class Terminal(Frame):
     command_inserts: dict[str, str] = {
         "Windows": "PS {command}>",
         "Linux": "{command}$",
@@ -47,7 +47,7 @@ class Terminal(Frame):
         if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1]
 
-        # If the command is clear or cls, clear the screen
+        # If the command is "clear" or "cls", clear the screen
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.text.insert(
@@ -64,13 +64,16 @@ class Terminal(Frame):
             stdin=PIPE,
             text=True,
             creationflags=CREATE_NEW_CONSOLE if SYSTEM == "Windows" else 0,
+            cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
         )
-        process.wait()
         # Check if the command was successful
-        returncode = process.returncode
+        returncode = process.wait()
         returnlines = process.stdout.readlines()
         if returncode != 0:
-            returnlines = process.stderr.readlines()
+            returnlines += (
+                process.stderr.readlines()
+            )  # If the command was unsuccessful, it doesn't give stdout
+            # TODO: Get the success message from the command (see #16)
 
         self.text.insert("insert", "\n")
         self.index += 1
@@ -83,13 +86,3 @@ class Terminal(Frame):
             f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
         )
         return "break"  # Prevent the default newline character insertion
-
-
-if __name__ == "__main__":
-    from tkinter import Tk
-
-    root = Tk()
-    root.title("Terminal")
-    term = Terminal(root)
-    term.pack(expand=True, fill="both")
-    root.mainloop()
