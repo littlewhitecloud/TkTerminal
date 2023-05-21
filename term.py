@@ -31,7 +31,7 @@ class Terminal(Tk):
         self.text.pack(expand=True, fill="both")
         self.index = 1
 
-        self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
+        self.text.insert("insert", f"{command_inserts[SYSTEM].format(command=getcwd())} ")
         self.text.bind("<KeyPress-Return>", self.loop)
         self.resize()
         self.deiconify()
@@ -64,7 +64,7 @@ class Terminal(Tk):
         # If the command is clear or cls, clear the screen
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
-            self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
+            self.text.insert("insert", f"{command_inserts[SYSTEM].format(command=getcwd())} ")
             return "break"
 
         returnlines = popen(cmd)
@@ -76,9 +76,8 @@ class Terminal(Tk):
             self.text.insert("insert", line)
             self.index += 1
 
-        # Remove the next two lines that cause the extra newlines
-        self.text.insert("insert", command_inserts[SYSTEM].format(command=getcwd()))
-        return "break"  # Prevent the default newline character insertion
+        self.text.insert("insert", f"{command_inserts[SYSTEM].format(command=getcwd())} ")
+        return "break" # Prevent the default newline character insertion
 
 
 example = Terminal()
