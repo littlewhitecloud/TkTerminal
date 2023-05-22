@@ -1,0 +1,7 @@
+info.txt
+.dist/
+dist/
+tkterm.egg-info/
+tkterm/__pycache__/
+.DS_Store
+.ruff_cache/
