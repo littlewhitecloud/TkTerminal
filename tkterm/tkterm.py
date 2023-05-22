@@ -46,7 +46,7 @@ class Terminal(Frame):
         self.current_process: Popen | None = None
 
         # Bind events
-        self.text.bind("<Key>", self.keypress)
+        self.text.bind("<Key>", self.keypress, add=True)
         self.text.bind("<Return>", self.loop, add=True)
 
     def loop(self, _: Event) -> str:
@@ -74,6 +74,7 @@ class Terminal(Frame):
             stdin=PIPE,
             text=True,
             cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
+            creationflags=CREATE_NEW_CONSOLE if SYSTEM == "Windows" else 0,
         )
         # Check if the command was successful
         returncode = self.current_process.wait()
