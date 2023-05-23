@@ -1,38 +1,35 @@
 from __future__ import annotations
 
-
+from os import getcwd
+from platform import system
 from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
-from platform import system
-from os import getcwd
 
-# Extra
-try:
-    from sv_ttk import set_theme
-    from darkdetect import isDark
-    THEME = True
-except:
-    THEME = False
+from darkdetect import isDark
+from sv_ttk import set_theme
+
+# Set constants
 
 SYSTEM = system()
+CREATE_NEW_CONSOLE = 0
+DIR = "{command}$ "
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
+
+    DIR = "PS {command}>"
+
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
 
-    command_inserts: dict[str, str] = {
-        "Windows": "PS {command}>",
-        "Linux": "{command}$",
-        "Darwin": "{command}$",
-    }
-
     def __init__(self, master: Misc) -> None:
         Frame.__init__(self, master)
 
-        # Create text widget
-        self.scrollbarx = Scrollbar(self,)
+        # Create text widget and scrollbars
+        self.scrollbarx = Scrollbar(
+            self,
+        )
         self.scrollbary = Scrollbar(self, orient="horizontal")
         self.text = Text(
             self,
@@ -41,22 +38,23 @@ class Terminal(Frame):
             selectbackground="#b4b3b3",
             relief="flat",
             foreground="#cccccc",
-            yscrollcommand=self.scrollbarx.set, 
-            xscrollcommand=self.scrollbary.set, 
+            yscrollcommand=self.scrollbarx.set,
+            xscrollcommand=self.scrollbary.set,
             wrap="none",
             font=("Cascadia Code", 9, "normal"),
         )
         self.scrollbarx.config(command=self.text.yview)
         self.scrollbary.config(command=self.text.xview)
-		
-        self.scrollbarx.pack(side="right", fill="y")
-        self.scrollbary.pack(side="bottom", fill="x")
-        self.text.pack(expand=True, fill="both")
+
+        # Grid widgets
+        self.text.grid(row=0, column=0, sticky="nsew")
+        self.scrollbarx.grid(row=0, column=1, sticky="ns")
+        self.scrollbary.grid(row=1, column=0, sticky="ew")
 
         # Create command prompt
         self.text.insert(
             "insert",
-            f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
+            f"{DIR.format(command=getcwd())}",
         )
 
         # Set variables
@@ -66,11 +64,12 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Key>", self.keypress, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-        
-        if THEME:
-            if isDark(): set_theme("dark")
-            else: set_theme("light")
-        
+
+        if isDark():
+            set_theme("dark")
+        else:
+            set_theme("light")
+
     def loop(self, _: Event) -> str:
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
@@ -84,7 +83,7 @@ class Terminal(Frame):
             self.text.delete("1.0", "end")
             self.text.insert(
                 "insert",
-                f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
+                f"{DIR.format(command=getcwd())}",
             )
             return "break"
 
@@ -96,7 +95,7 @@ class Terminal(Frame):
             stdin=PIPE,
             text=True,
             cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
-            creationflags=CREATE_NEW_CONSOLE if SYSTEM == "Windows" else 0,
+            creationflags=CREATE_NEW_CONSOLE,
         )
         # Check if the command was successful
         returncode = self.current_process.wait()
@@ -117,7 +116,7 @@ class Terminal(Frame):
 
         self.text.insert(
             "insert",
-            f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
+            f"{DIR.format(command=getcwd())}",
         )
         return "break"  # Prevent the default newline character insertion
 
@@ -131,12 +130,13 @@ class Terminal(Frame):
                 self.current_process = None
                 self.text.insert(
                     "insert",
-                    f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
+                    f"{DIR.format(command=getcwd())}",
                 )
                 return "break"
-		
-		# TODO: Add key up and key down to show history command
-		
+
+
+# TODO: Add key up and key down to show history command
+
 if __name__ == "__main__":
     from tkinter import Tk
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # Place app and make the minimum size the actual minimum size (non-infringable)
     root.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
     root.wm_minsize(minimum_width, minimum_height)
-    
+
     # Show root window
     root.deiconify()
 
