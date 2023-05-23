@@ -7,6 +7,14 @@ from tkinter.ttk import Frame, Scrollbar
 from platform import system
 from os import getcwd
 
+# Extra
+try:
+    from sv_ttk import set_theme
+    from darkdetect import isDark
+    THEME = True
+except:
+    THEME = False
+
 SYSTEM = system()
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
@@ -58,7 +66,11 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Key>", self.keypress, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-
+        
+        if THEME:
+            if isDark(): set_theme("dark")
+            else: set_theme("light")
+        
     def loop(self, _: Event) -> str:
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
