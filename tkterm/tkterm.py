@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from os import getcwd
-from platform import system
+
 from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
-from tkinter.ttk import Frame
+from tkinter.ttk import Frame, Scrollbar
+from platform import system
+from os import getcwd
 
 SYSTEM = system()
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
-
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
@@ -24,6 +24,8 @@ class Terminal(Frame):
         Frame.__init__(self, master)
 
         # Create text widget
+        self.scrollbarx = Scrollbar(self,)
+        self.scrollbary = Scrollbar(self, orient="horizontal")
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -31,8 +33,16 @@ class Terminal(Frame):
             selectbackground="#b4b3b3",
             relief="flat",
             foreground="#cccccc",
-            font=("Georgia", 12),
+            yscrollcommand=self.scrollbarx.set, 
+            xscrollcommand=self.scrollbary.set, 
+            wrap="none",
+            font=("Cascadia Code", 9, "normal"),
         )
+        self.scrollbarx.config(command=self.text.yview)
+        self.scrollbary.config(command=self.text.xview)
+		
+        self.scrollbarx.pack(side="right", fill="y")
+        self.scrollbary.pack(side="bottom", fill="x")
         self.text.pack(expand=True, fill="both")
 
         # Create command prompt
@@ -55,7 +65,7 @@ class Terminal(Frame):
         # Determine command based on system
         cmd = cmd.split("$")[-1]  # Unix
         if SYSTEM == "Windows":
-            cmd = cmd.split(">")[-1]
+            cmd = cmd.split(">")[-1].strip()
 
         # If the command is "clear" or "cls", clear the screen
         if cmd in ["clear", "cls"]:
@@ -112,7 +122,9 @@ class Terminal(Frame):
                     f"{Terminal.command_inserts[SYSTEM].format(command=getcwd())} ",
                 )
                 return "break"
-
+		
+		# TODO: Add key up and key down to show history command
+		
 if __name__ == "__main__":
     from tkinter import Tk
 
@@ -141,11 +153,10 @@ if __name__ == "__main__":
     # Get center of screen based on minimum size
     x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
     y_coords = int(root.wm_maxsize()[1] / 2 - minimum_height / 2)
-
     # Place app and make the minimum size the actual minimum size (non-infringable)
     root.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
     root.wm_minsize(minimum_width, minimum_height)
-
+    
     # Show root window
     root.deiconify()
 
