@@ -1,5 +1,8 @@
 from tkinter import Tk
 
+from darkdetect import isDark
+from sv_ttk import set_theme
+
 from tkterm import Terminal
 
 # Create root window
@@ -7,6 +10,12 @@ root = Tk()
 
 # Hide root window during initialization
 root.withdraw()
+
+# Set a ttk theme
+if isDark():
+    set_theme("dark")
+else:
+    set_theme("light")
 
 # Set title
 root.title("Terminal")

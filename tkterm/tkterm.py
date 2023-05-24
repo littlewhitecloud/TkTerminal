@@ -6,9 +6,6 @@ from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
-from darkdetect import isDark
-from sv_ttk import set_theme
-
 # Set constants
 
 SYSTEM = system()
@@ -25,6 +22,10 @@ class Terminal(Frame):
 
     def __init__(self, master: Misc) -> None:
         Frame.__init__(self, master)
+
+        # Set row and column weights
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
         self.scrollbarx = Scrollbar(
@@ -64,11 +65,6 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Key>", self.keypress, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-
-        if isDark():
-            set_theme("dark")
-        else:
-            set_theme("light")
 
     def loop(self, _: Event) -> str:
         """Create an input loop"""
@@ -140,8 +136,16 @@ class Terminal(Frame):
 if __name__ == "__main__":
     from tkinter import Tk
 
+    from darkdetect import isDark
+    from sv_ttk import set_theme
+
     # Create root window
     root = Tk()
+
+    if isDark():
+        set_theme("dark")
+    else:
+        set_theme("light")
 
     # Hide root window during initialization
     root.withdraw()
