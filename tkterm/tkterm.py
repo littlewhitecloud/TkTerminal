@@ -5,9 +5,12 @@ from platform import system
 from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
+from platformdirs import user_cache_dir
+from pathlib import Path
 
 # Set constants
 
+HISTORY_PATH = Path(user_cache_dir("tkterm"))
 SYSTEM = system()
 CREATE_NEW_CONSOLE = 0
 DIR = "{command}$ "
@@ -16,14 +19,15 @@ if SYSTEM == "Windows":
 
     DIR = "PS {command}>"
 
-class AutoHideScrollbar(Scrollbar):
-    def set(self, upper, lower):
-        if float(upper) <= 0.0 and float(lower) >= 1.0:
-            self.grid_remove()
-        else:
-            self.grid(row=0, column=1, sticky="ns")
-    
-        Scrollbar.set(self, upper, lower)
+# Check that the history directory exists
+if not HISTORY_PATH.exists():
+    HISTORY_PATH.mkdir(parents=True)
+    # Also create the history file
+    open(HISTORY_PATH / "history.txt", "w").close()
+
+# Check that the history file exists
+if not (HISTORY_PATH / "history.txt").exists():
+    open(HISTORY_PATH / "history.txt", "w").close()
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
@@ -36,7 +40,8 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
-        self.scrollbarx = AutoHideScrollbar(self)
+        self.xscroll = Scrollbar(self, orient="horizontal")
+        self.yscroll = Scrollbar(self, orient="vertical")
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -44,15 +49,18 @@ class Terminal(Frame):
             selectbackground="#b4b3b3",
             relief="flat",
             foreground="#cccccc",
-            yscrollcommand=self.scrollbarx.set,
-            wrap="char",
+            xscrollcommand=self.xscroll.set,
+            yscrollcommand=self.yscroll.set,
+            wrap="none",
             font=("Cascadia Code", 9, "normal"),
         )
-        self.scrollbarx.config(command=self.text.yview)
+        self.xscroll.config(command=self.text.xview)
+        self.yscroll.config(command=self.text.yview)
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-        self.scrollbarx.grid(row=0, column=1, sticky="ns")
+        self.xscroll.grid(row=1, column=0, sticky="ew")
+        self.yscroll.grid(row=0, column=1, sticky="ns")
 
         # Create command prompt
         self.text.insert(
@@ -65,14 +73,15 @@ class Terminal(Frame):
         self.current_process: Popen | None = None
 
         # Bind events
-        self.text.bind("<Key>", self.keypress, add=True)
+        self.text.bind("<Up>", self.up, add=True)
+        self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-        
+
         # History recorder
-        self.history = open("history.txt", "r+")
-        self.historys = self.history.read().split("\n")
-        self.hi = len(self.historys)
-        
+        self.history = open(HISTORY_PATH / "history.txt", "r+")
+        self.historys = self.history.readlines()
+        self.hi = len(self.historys) - 1
+
     def loop(self, _: Event) -> str:
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
@@ -80,10 +89,13 @@ class Terminal(Frame):
         cmd = cmd.split("$")[-1]  # Unix
         if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1].strip()
-        
+
         # Record the command
-        self.history.write(cmd)
-        
+        if cmd != "":
+            self.history.write(cmd + "\n")
+            self.historys.append(cmd)
+            self.hi = len(self.historys) - 1
+
         # If the command is "clear" or "cls", clear the screen
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
@@ -126,32 +138,42 @@ class Terminal(Frame):
         )
         return "break"  # Prevent the default newline character insertion
 
-    def keypress(self, event: Event) -> str:
-        """Handle keypresses"""
-
-        # Control + c cancels the current process
-        if event.state == 4 and event.keysym == "c":
-            if self.current_process is not None:
-                self.current_process.kill()
-                self.current_process = None
-                self.text.insert(
-                    "insert",
-                    f"{DIR.format(command=getcwd())}",
-                )
-                return "break"
-
-        # TODO: Improve key up and key down 
-        if event.keysym == "Up" or event.keysym == "Down":
-            self.text.delete("%d.%d" % (self.index, len(DIR.format(command=getcwd()))), "end")
+    def up(self, _: Event) -> str:
+        """Go up in the history"""
+        if self.hi >= 0:
+            self.text.delete(f"{self.index}.0", "end-1c")
+            # Insert the directory
             self.text.insert(
                 "insert",
-                self.historys[self.hi],
+                f"{DIR.format(command=getcwd())}",
             )
-            if event.keysym == "Up": self.hi -= 1
-            else: self.hi += 1
+            # Insert the command
+            self.text.insert("insert", self.historys[self.hi].strip())
+            self.hi -= 1
+        return "break"
 
-            return "break"         
-        
+    def down(self, _: Event) -> str:
+        """Go down in the history"""
+        if self.hi < len(self.historys) - 1:
+            self.text.delete(f"{self.index}.0", "end-1c")
+            # Insert the directory
+            self.text.insert(
+                "insert",
+                f"{DIR.format(command=getcwd())}",
+            )
+            # Insert the command
+            self.text.insert("insert", self.historys[self.hi].strip())
+            self.hi += 1
+        else:
+            # Clear the command
+            self.text.delete(f"{self.index}.0", "end-1c")
+            # Insert the directory
+            self.text.insert(
+                "insert",
+                f"{DIR.format(command=getcwd())}",
+            )
+        return "break"
+
 if __name__ == "__main__":
     from tkinter import Tk
 
