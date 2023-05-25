@@ -28,10 +28,7 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
-        self.scrollbarx = Scrollbar(
-            self,
-        )
-        self.scrollbary = Scrollbar(self, orient="horizontal")
+        self.scrollbarx = Scrollbar(self,)
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -40,17 +37,14 @@ class Terminal(Frame):
             relief="flat",
             foreground="#cccccc",
             yscrollcommand=self.scrollbarx.set,
-            xscrollcommand=self.scrollbary.set,
             wrap="none",
             font=("Cascadia Code", 9, "normal"),
         )
         self.scrollbarx.config(command=self.text.yview)
-        self.scrollbary.config(command=self.text.xview)
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
         self.scrollbarx.grid(row=0, column=1, sticky="ns")
-        self.scrollbary.grid(row=1, column=0, sticky="ew")
 
         # Create command prompt
         self.text.insert(
@@ -146,8 +140,7 @@ class Terminal(Frame):
                 "insert",
                 self.historys[self.hi],
             )
-            if event.keysym == "Up": 
-                self.hi -= 1
+            if event.keysym == "Up": self.hi -= 1
             else: self.hi += 1
 
             return "break"         
