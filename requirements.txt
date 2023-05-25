@@ -1,2 +1,1 @@
-sv_ttk
-darkdetect
+platformdirs

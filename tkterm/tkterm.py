@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from os import getcwd
+from pathlib import Path
 from platform import system
 from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
+
 from platformdirs import user_cache_dir
-from pathlib import Path
 
 # Set constants
 
@@ -28,6 +29,7 @@ if not HISTORY_PATH.exists():
 # Check that the history file exists
 if not (HISTORY_PATH / "history.txt").exists():
     open(HISTORY_PATH / "history.txt", "w").close()
+
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
@@ -174,19 +176,12 @@ class Terminal(Frame):
             )
         return "break"
 
+
 if __name__ == "__main__":
     from tkinter import Tk
 
-    from darkdetect import isDark
-    from sv_ttk import set_theme
-
     # Create root window
     root = Tk()
-
-    if isDark():
-        set_theme("dark")
-    else:
-        set_theme("light")
 
     # Hide root window during initialization
     root.withdraw()
