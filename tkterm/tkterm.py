@@ -16,6 +16,14 @@ if SYSTEM == "Windows":
 
     DIR = "PS {command}>"
 
+class AutoHideScrollbar(Scrollbar):
+    def set(self, upper, lower):
+        if float(upper) <= 0.0 and float(lower) >= 1.0:
+            self.grid_remove()
+        else:
+            self.grid(row=0, column=1, sticky="ns")
+    
+        Scrollbar.set(self, upper, lower)
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
@@ -28,7 +36,7 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
-        self.scrollbarx = Scrollbar(self,)
+        self.scrollbarx = AutoHideScrollbar(self)
         self.text = Text(
             self,
             background="#2B2B2B",
