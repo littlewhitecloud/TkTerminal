@@ -65,7 +65,12 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Key>", self.keypress, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-
+        
+        # History recorder
+        self.history = open("history.txt", "r+")
+        self.historys = self.history.read().split("\n")
+        self.hi = len(self.historys) # hi: History Index
+        
     def loop(self, _: Event) -> str:
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
@@ -73,7 +78,10 @@ class Terminal(Frame):
         cmd = cmd.split("$")[-1]  # Unix
         if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1].strip()
-
+        
+        # Record the command
+        self.history.write(cmd)
+        
         # If the command is "clear" or "cls", clear the screen
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
@@ -131,8 +139,19 @@ class Terminal(Frame):
                 return "break"
 
 
-# TODO: Add key up and key down to show history command
+        # TODO: Add key up and key down to show history command
+        if event.keysym == "Up" or event.keysym == "Down":
+            self.text.delete("%d.%d" % (self.index, len(DIR.format(command=getcwd()))), "end")
+            self.text.insert(
+                "insert",
+                self.historys[self.hi],
+            )
+            if event.keysym == "Up": 
+                self.hi -= 1
+            else: self.hi += 1
 
+            return "break"         
+        
 if __name__ == "__main__":
     from tkinter import Tk
 
