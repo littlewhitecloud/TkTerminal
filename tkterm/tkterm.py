@@ -45,7 +45,7 @@ class Terminal(Frame):
             relief="flat",
             foreground="#cccccc",
             yscrollcommand=self.scrollbarx.set,
-            wrap="none",
+            wrap="char",
             font=("Cascadia Code", 9, "normal"),
         )
         self.scrollbarx.config(command=self.text.yview)
@@ -71,7 +71,7 @@ class Terminal(Frame):
         # History recorder
         self.history = open("history.txt", "r+")
         self.historys = self.history.read().split("\n")
-        self.hi = len(self.historys) # hi: History Index
+        self.hi = len(self.historys)
         
     def loop(self, _: Event) -> str:
         """Create an input loop"""
@@ -140,8 +140,7 @@ class Terminal(Frame):
                 )
                 return "break"
 
-
-        # TODO: Add key up and key down to show history command
+        # TODO: Improve key up and key down 
         if event.keysym == "Up" or event.keysym == "Down":
             self.text.delete("%d.%d" % (self.index, len(DIR.format(command=getcwd()))), "end")
             self.text.insert(
