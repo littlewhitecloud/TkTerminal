@@ -46,7 +46,7 @@ class AutoHideScrollbar(Scrollbar):
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
 
-    def __init__(self, master: Misc) -> None:
+    def __init__(self, master: Misc, autohide: bool = True) -> None:
         Frame.__init__(self, master)
 
         # Set row and column weights
@@ -54,8 +54,9 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
-        self.xscroll = AutoHideScrollbar(self, orient="horizontal")
-        self.yscroll = AutoHideScrollbar(self)
+        scrollbars = Scrollbar if not autohide else AutoHideScrollbar
+        self.xscroll = scrollbars(self, orient="horizontal")
+        self.yscroll = scrollbars(self)
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -89,12 +90,12 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
+        self.text.bind("<Left>", self.left, add=True)
         self.text.bind("<Return>", self.loop, add=True)
 
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt", "r+")
-        self.historys = self.history.readlines()
-        print(self.historys)
+        self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
 
     def loop(self, _: Event) -> str:
@@ -188,6 +189,14 @@ class Terminal(Frame):
                 f"{DIR.format(command=getcwd())}",
             )
         return "break"
+
+    def left(self, _: Event) -> str:
+        """Go left in the command if the index is greater than the length of the directory"""
+        insert_index = self.text.index("insert")
+        dir_index = f"{insert_index.split('.')[0]}.{len(DIR.format(command=getcwd()))}"
+        print(insert_index, dir_index)
+        if insert_index == dir_index:
+            return "break"
 
 
 if __name__ == "__main__":
