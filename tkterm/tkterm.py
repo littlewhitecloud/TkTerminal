@@ -91,68 +91,13 @@ class Terminal(Frame):
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
+        self.text.bind("<Control-c>", self.kill, add=True) # Isn't working
         self.text.bind("<Return>", self.loop, add=True)
 
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt", "r+")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
-
-    def loop(self, _: Event) -> str:
-        """Create an input loop"""
-        cmd = self.text.get(f"{self.index}.0", "end-1c")
-        # Determine command based on system
-        cmd = cmd.split("$")[-1]  # Unix
-        if SYSTEM == "Windows":
-            cmd = cmd.split(">")[-1].strip()
-
-        # Record the command
-        if cmd != "":
-            self.history.write(cmd + "\n")
-            self.historys.append(cmd)
-            self.hi = len(self.historys) - 1
-
-        # If the command is "clear" or "cls", clear the screen
-        if cmd in ["clear", "cls"]:
-            self.text.delete("1.0", "end")
-            self.text.insert(
-                "insert",
-                f"{DIR.format(command=getcwd())}",
-            )
-            return "break"
-
-        self.current_process = Popen(
-            cmd,
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE,
-            stdin=PIPE,
-            text=True,
-            cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
-            creationflags=CREATE_NEW_CONSOLE,
-        )
-        # Check if the command was successful
-        returncode = self.current_process.wait()
-        process = self.current_process
-        self.current_process = None
-        returnlines = process.stdout.readlines()
-        if returncode != 0:
-            returnlines += (
-                process.stderr.readlines()
-            )  # If the command was unsuccessful, it doesn't give stdout
-            # TODO: Get the success message from the command (see #16)
-
-        self.text.insert("insert", "\n")
-        self.index += 1
-        for line in returnlines:
-            self.text.insert("insert", line)
-            self.index += 1
-
-        self.text.insert(
-            "insert",
-            f"{DIR.format(command=getcwd())}",
-        )
-        return "break"  # Prevent the default newline character insertion
 
     def up(self, _: Event) -> str:
         """Go up in the history"""
@@ -194,10 +139,76 @@ class Terminal(Frame):
         """Go left in the command if the index is greater than the length of the directory"""
         insert_index = self.text.index("insert")
         dir_index = f"{insert_index.split('.')[0]}.{len(DIR.format(command=getcwd()))}"
-        print(insert_index, dir_index)
         if insert_index == dir_index:
             return "break"
 
+    def kill(self, _: Event) -> str:
+        """Kill the current process"""
+        if self.current_process:
+            self.current_process.kill()
+            self.current_process = None
+        return "break"
+
+    def loop(self, _: Event) -> str:
+        """Create an input loop"""
+        cmd = self.text.get(f"{self.index}.0", "end-1c")
+        # Determine command based on system
+        cmd = cmd.split("$")[-1]  # Unix
+        if SYSTEM == "Windows":
+            cmd = cmd.split(">")[-1].strip()
+
+        # Record the command
+        if cmd != "":
+            self.history.write(cmd + "\n")
+            self.historys.append(cmd)
+            self.hi = len(self.historys) - 1
+
+        # Check that the insert position is at the end
+        if self.text.index("insert") != f"{self.index}.end":
+            self.text.mark_set("insert", f"{self.index}.end")
+            self.text.see("insert")
+
+        # If the command is "clear" or "cls", clear the screen
+        if cmd in ["clear", "cls"]:
+            self.text.delete("1.0", "end")
+            self.text.insert(
+                "insert",
+                f"{DIR.format(command=getcwd())}",
+            )
+            return "break"
+
+        self.current_process = Popen(
+            cmd,
+            shell=True,
+            stdout=PIPE,
+            stderr=PIPE,
+            stdin=PIPE,
+            text=True,
+            cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
+            creationflags=CREATE_NEW_CONSOLE,
+        ) # The following needs to be put in an after so the kill command works and the program doesn't freeze
+        # Check if the command was successful
+        returncode = self.current_process.wait()
+        process = self.current_process
+        self.current_process = None
+        returnlines = process.stdout.readlines()
+        if returncode != 0:
+            returnlines += (
+                process.stderr.readlines()
+            )  # If the command was unsuccessful, it doesn't give stdout
+            # TODO: Get the success message from the command (see #16)
+
+        self.text.insert("insert", "\n")
+        self.index += 1
+        for line in returnlines:
+            self.text.insert("insert", line)
+            self.index += 1
+
+        self.text.insert(
+            "insert",
+            f"{DIR.format(command=getcwd())}",
+        )
+        return "break"  # Prevent the default newline character insertion
 
 if __name__ == "__main__":
     from tkinter import Tk
