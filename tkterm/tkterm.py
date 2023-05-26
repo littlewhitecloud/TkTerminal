@@ -30,6 +30,18 @@ if not HISTORY_PATH.exists():
 if not (HISTORY_PATH / "history.txt").exists():
     open(HISTORY_PATH / "history.txt", "w").close()
 
+class AutoHideScrollbar(Scrollbar):
+    """Scrollbar that automatically hides when not needed"""
+    def __init__(self, master=None, **kwargs):
+        Scrollbar.__init__(self, master=master, **kwargs)
+
+    def set(self, l, h):
+        if float(l) <= 0.0 and float(h) >= 1.0:
+            self.grid_remove()
+        else:
+            self.grid()
+
+        Scrollbar.set(self, l, h)
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications"""
@@ -42,8 +54,8 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
-        self.xscroll = Scrollbar(self, orient="horizontal")
-        self.yscroll = Scrollbar(self, orient="vertical")
+        self.xscroll = AutoHideScrollbar(self, orient="horizontal")
+        self.yscroll = AutoHideScrollbar(self)
         self.text = Text(
             self,
             background="#2B2B2B",
@@ -82,6 +94,7 @@ class Terminal(Frame):
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt", "r+")
         self.historys = self.history.readlines()
+        print(self.historys)
         self.hi = len(self.historys) - 1
 
     def loop(self, _: Event) -> str:
