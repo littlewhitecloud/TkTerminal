@@ -91,7 +91,7 @@ class Terminal(Frame):
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
-        self.text.bind("<Control-c>", self.kill, add=True) # Isn't working
+        self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
         self.text.bind("<Return>", self.loop, add=True)
 
         # History recorder
