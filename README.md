@@ -4,7 +4,7 @@
 
 ## Views:
 ### Windows
-<img src="images/_windows.png" width="85%" align="center">
+<img src="images/windows.png" width="85%" align="center">
 
 ### MacOS
 <img src="images/macos.png" width="85%" align="center">
