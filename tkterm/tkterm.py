@@ -157,7 +157,7 @@ class Terminal(Frame):
         return "break"
 
     def left(self, _: Event) -> str:
-        """Go left in the command if the index is greater than the length of the directory"""
+        """Go left in the command if the command is greater than the path"""
         insert_index = self.text.index("insert")
         dir_index = f"{insert_index.split('.')[0]}.{len(DIR.format(command=getcwd()))}"
         if insert_index == dir_index:
