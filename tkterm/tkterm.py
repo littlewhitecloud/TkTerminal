@@ -30,23 +30,42 @@ if not HISTORY_PATH.exists():
 if not (HISTORY_PATH / "history.txt").exists():
     open(HISTORY_PATH / "history.txt", "w").close()
 
+
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
+
     def __init__(self, master=None, **kwargs):
         Scrollbar.__init__(self, master=master, **kwargs)
 
-    def set(self, l, h):
-        if float(l) <= 0.0 and float(h) >= 1.0:
+    def set(self, length, height):
+        if float(length) <= 0.0 and float(height) >= 1.0:
             self.grid_remove()
         else:
             self.grid()
 
-        Scrollbar.set(self, l, h)
+        Scrollbar.set(self, length, height)
+
 
 class Terminal(Frame):
-    """A terminal widget for tkinter applications"""
+    """A terminal widget for tkinter applications
 
-    def __init__(self, master: Misc, autohide: bool = True) -> None:
+    Args:
+        master (Misc): The parent widget
+        autohide (bool, optional): Whether to autohide the scrollbars. Defaults to True.
+        *args: Arguments for the text widget
+        **kwargs: Keyword arguments for the text widget
+
+    Methods for outside use:
+        None
+
+    Methods for internal use:
+        up (Event) -> str: Goes up in the history
+        down (Event) -> str: Goes down in the history (if the user is at the bottom of the history, it clears the command)
+        left (Event) -> str: Goes left in the command if the index is greater than the length of the directory (so the user can't delete the directory or go left of it)
+        kill (Event) -> str: Kills the current command
+        loop (Event) -> str: Runs the command typed"""
+
+    def __init__(self, master: Misc, autohide: bool = True, *args, **kwargs):
         Frame.__init__(self, master)
 
         # Set row and column weights
@@ -59,15 +78,16 @@ class Terminal(Frame):
         self.yscroll = scrollbars(self)
         self.text = Text(
             self,
-            background="#2B2B2B",
-            insertbackground="#DCDCDC",
-            selectbackground="#b4b3b3",
-            relief="flat",
-            foreground="#cccccc",
+            *args,
+            background=kwargs.get("background", "#2B2B2B"),
+            insertbackground=kwargs.get("insertbackground", "#DCDCDC"),
+            selectbackground=kwargs.get("selectbackground", "#b4b3b3"),
+            relief=kwargs.get("relief", "flat"),
+            foreground=kwargs.get("foreground", "#cccccc"),
             xscrollcommand=self.xscroll.set,
             yscrollcommand=self.yscroll.set,
-            wrap="none",
-            font=("Cascadia Code", 9, "normal"),
+            wrap=kwargs.get("wrap", "char"),
+            font=kwargs.get("font", ("Cascadia Code", 9, "normal")),
         )
         self.xscroll.config(command=self.text.xview)
         self.yscroll.config(command=self.text.yview)
@@ -91,7 +111,8 @@ class Terminal(Frame):
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
-        self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
+        self.text.bind("<BackSpace>", self.left, add=True)
+        self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
         self.text.bind("<Return>", self.loop, add=True)
 
         # History recorder
@@ -186,16 +207,14 @@ class Terminal(Frame):
             text=True,
             cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
             creationflags=CREATE_NEW_CONSOLE,
-        ) # The following needs to be put in an after so the kill command works and the program doesn't freeze
+        )  # The following needs to be put in an after so the kill command works and the program doesn't freeze
         # Check if the command was successful
         returncode = self.current_process.wait()
         process = self.current_process
         self.current_process = None
         returnlines = process.stdout.readlines()
         if returncode != 0:
-            returnlines += (
-                process.stderr.readlines()
-            )  # If the command was unsuccessful, it doesn't give stdout
+            returnlines += process.stderr.readlines()  # If the command was unsuccessful, it doesn't give stdout
             # TODO: Get the success message from the command (see #16)
 
         self.text.insert("insert", "\n")
@@ -209,6 +228,7 @@ class Terminal(Frame):
             f"{DIR.format(command=getcwd())}",
         )
         return "break"  # Prevent the default newline character insertion
+
 
 if __name__ == "__main__":
     from tkinter import Tk
