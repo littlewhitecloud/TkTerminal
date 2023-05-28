@@ -11,5 +11,5 @@ setup(
     long_description_content_type="text/markdown",
     author="littlewhitecloud",
     url="https://github.com/littlewhitecloud/TkTerminal",
-    packages=["tkterm"],
+    packages=["tktermwidget"],
 )
