@@ -4,7 +4,7 @@ with open("README.md", "r") as file:
     long_description = file.read()
 
 setup(
-    name="tkterm",
+    name="tktermwidget",
     version="0.0.1",
     description="A terminal emulator for Tkinter",
     long_description=long_description,
