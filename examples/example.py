@@ -1,6 +1,6 @@
 from tkinter import Tk
 
-from tkterm import Terminal
+from tktermwidget import Terminal
 
 # Create root window
 root = Tk()
