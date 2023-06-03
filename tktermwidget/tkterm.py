@@ -203,12 +203,13 @@ class Terminal(Frame):
             creationflags=CREATE_NEW_CONSOLE,
         )  # The following needs to be put in an after so the kill command works and the program doesn't freeze
         # Check if the command was successful
-        returncode = self.current_process.wait()
+        returnlines, errors, = self.current_process.communicate()
         process = self.current_process
+        returncode = self.current_process.returncode
         self.current_process = None
-        returnlines = process.stdout.readlines()
+
         if returncode != 0:
-            returnlines += process.stderr.readlines()  # If the command was unsuccessful, it doesn't give stdout
+            returnlines += errors # If the command was unsuccessful, it doesn't give stdout
             # TODO: Get the success message from the command (see #16)
 
         self.text.insert("insert", "\n")
@@ -242,9 +243,9 @@ if __name__ == "__main__":
     # Update widgets so minimum size is accurate
     root.update_idletasks()
 
-    # Get minimum size
-    minimum_width: int = root.winfo_reqwidth()
-    minimum_height: int = root.winfo_reqheight()
+    # Set the minimum size
+    minimum_width: int = 850
+    minimum_height: int = 475
 
     # Get center of screen based on minimum size
     x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
