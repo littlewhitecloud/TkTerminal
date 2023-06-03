@@ -98,10 +98,7 @@ class Terminal(Frame):
         self.yscroll.grid(row=0, column=1, sticky="ns")
 
         # Create command prompt
-        self.text.insert(
-            "insert",
-            f"{DIR.format(command=getcwd())}",
-        )
+        self.directory()
 
         # Set variables
         self.index = 1
@@ -111,24 +108,30 @@ class Terminal(Frame):
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
-        self.text.bind("<BackSpace>", self.left, add=True)
-        self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
         self.text.bind("<Return>", self.loop, add=True)
+        self.text.bind("<BackSpace>", self.left, add=True)
+        
+        # TODO: Refactor the way we get output from subprocess
+        self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt", "r+")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
+	
+    def directory(self):
+        """Insert the directory"""
+        self.text.insert(
+            "insert",
+            f"{DIR.format(command=getcwd())}",
+        )
 
     def up(self, _: Event) -> str:
         """Go up in the history"""
         if self.hi >= 0:
             self.text.delete(f"{self.index}.0", "end-1c")
             # Insert the directory
-            self.text.insert(
-                "insert",
-                f"{DIR.format(command=getcwd())}",
-            )
+            self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
             self.hi -= 1
@@ -139,10 +142,7 @@ class Terminal(Frame):
         if self.hi < len(self.historys) - 1:
             self.text.delete(f"{self.index}.0", "end-1c")
             # Insert the directory
-            self.text.insert(
-                "insert",
-                f"{DIR.format(command=getcwd())}",
-            )
+            self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
             self.hi += 1
@@ -150,10 +150,7 @@ class Terminal(Frame):
             # Clear the command
             self.text.delete(f"{self.index}.0", "end-1c")
             # Insert the directory
-            self.text.insert(
-                "insert",
-                f"{DIR.format(command=getcwd())}",
-            )
+            self.directory()
         return "break"
 
     def left(self, _: Event) -> str:
@@ -192,10 +189,7 @@ class Terminal(Frame):
         # If the command is "clear" or "cls", clear the screen
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
-            self.text.insert(
-                "insert",
-                f"{DIR.format(command=getcwd())}",
-            )
+            self.directory()
             return "break"
 
         self.current_process = Popen(
@@ -223,10 +217,7 @@ class Terminal(Frame):
             self.text.insert("insert", line)
             self.index += 1
 
-        self.text.insert(
-            "insert",
-            f"{DIR.format(command=getcwd())}",
-        )
+        self.directory()
         return "break"  # Prevent the default newline character insertion
 
 
@@ -251,9 +242,9 @@ if __name__ == "__main__":
     # Update widgets so minimum size is accurate
     root.update_idletasks()
 
-    # Get minimum size
-    minimum_width: int = root.winfo_reqwidth()
-    minimum_height: int = root.winfo_reqheight()
+    # Set the minimum size
+    minimum_width: int = 850
+    minimum_height: int = 475
 
     # Get center of screen based on minimum size
     x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)

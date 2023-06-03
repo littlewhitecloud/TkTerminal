@@ -21,8 +21,8 @@ term.pack(expand=True, fill="both")
 root.update_idletasks()
 
 # Get minimum size
-minimum_width: int = root.winfo_reqwidth()
-minimum_height: int = root.winfo_reqheight()
+minimum_width: int = 850
+minimum_height: int = 475
 
 # Get center of screen based on minimum size
 x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
