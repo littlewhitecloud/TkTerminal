@@ -52,5 +52,10 @@ root.deiconify()
 root.mainloop()
 ```
 
+## Install:
+```batch
+pip install tktermwidget
+```
+
 ### Coming soon
 
