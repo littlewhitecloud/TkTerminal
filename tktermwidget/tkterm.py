@@ -119,7 +119,6 @@ class Terminal(Frame):
         self.history = open(HISTORY_PATH / "history.txt", "r+")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
-        print(self.index)
     
     def directory(self):
         """Insert the directory"""
@@ -131,13 +130,10 @@ class Terminal(Frame):
     def up(self, _: Event) -> str:
         """Go up in the history"""
         if self.hi >= 0:
-
-            print(self.index)
             self.text.delete(f"{self.index}.0", "end-1c")
             # Insert the directory
             self.directory()
             # Insert the command
-            print(self.historys[self.hi].strip())
             self.text.insert("insert", self.historys[self.hi].strip())
             self.hi -= 1
         return "break"
@@ -181,7 +177,6 @@ class Terminal(Frame):
             cmd = cmd.split(">")[-1].strip()
 
         # Record the command
-        print(cmd)
         if cmd != "":
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
