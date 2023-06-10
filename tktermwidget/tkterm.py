@@ -176,11 +176,17 @@ class Terminal(Frame):
             cmd = cmd.split(">")[-1].strip()
         else:
             cmd = cmd.split("$")[-1].strip()  # Unix
+
         # Record the command
         if cmd != "":
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.hi = len(self.historys) - 1
+        else:
+            self.text.insert("insert", "\n")
+            self.index += 1
+            self.directory()
+            return "break"
 
         # Check that the insert position is at the end
         if self.text.index("insert") != f"{self.index}.end":
