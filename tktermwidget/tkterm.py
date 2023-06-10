@@ -1,3 +1,4 @@
+"""Terminal widget for tkinter"""
 from __future__ import annotations
 
 from os import getcwd
@@ -10,7 +11,6 @@ from tkinter.ttk import Frame, Scrollbar
 from platformdirs import user_cache_dir
 
 # Set constants
-
 HISTORY_PATH = Path(user_cache_dir("tkterm"))
 SYSTEM = system()
 CREATE_NEW_CONSOLE = 0
@@ -30,21 +30,18 @@ if not HISTORY_PATH.exists():
 if not (HISTORY_PATH / "history.txt").exists():
     open(HISTORY_PATH / "history.txt", "w").close()
 
-
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
 
     def __init__(self, master=None, **kwargs):
         Scrollbar.__init__(self, master=master, **kwargs)
 
-    def set(self, length, height):
-        if float(length) <= 0.0 and float(height) >= 1.0:
+    def set(self, first, last):
+        if float(first) <= 0.0 and float(last) >= 1.0:
             self.grid_remove()
         else:
             self.grid()
-
-        Scrollbar.set(self, length, height)
-
+        Scrollbar.set(self, first, last)
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications
@@ -60,8 +57,10 @@ class Terminal(Frame):
 
     Methods for internal use:
         up (Event) -> str: Goes up in the history
-        down (Event) -> str: Goes down in the history (if the user is at the bottom of the history, it clears the command)
-        left (Event) -> str: Goes left in the command if the index is greater than the length of the directory (so the user can't delete the directory or go left of it)
+        down (Event) -> str: Goes down in the history 
+        (if the user is at the bottom of the history, it clears the command)
+        left (Event) -> str: Goes left in the command if the index is greater than the length of the directory
+        (so the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
@@ -103,7 +102,7 @@ class Terminal(Frame):
         # Set variables
         self.index = 1
         self.current_process: Popen | None = None
-        
+
         # Bind events & tags
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
@@ -111,7 +110,7 @@ class Terminal(Frame):
         self.text.bind("<Return>", self.loop, add=True)
         self.text.bind("<BackSpace>", self.left, add=True)
         self.text.mark_set("io", "end-1c")
-        
+
         # TODO: Refactor the way we get output from subprocess
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
@@ -119,7 +118,7 @@ class Terminal(Frame):
         self.history = open(HISTORY_PATH / "history.txt", "r+")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
-    
+
     def directory(self):
         """Insert the directory"""
         self.text.insert(
@@ -206,12 +205,13 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            cwd=getcwd(),  # Until a solution for changing the working directory is found, this will have to do
+            cwd=getcwd(), # Until a solution for changing the working directory is found, this will have to do
             creationflags=CREATE_NEW_CONSOLE,
-        )  # The following needs to be put in an after so the kill command works and the program doesn't freeze
+        )
+        # The following needs to be put in an after so the kill command works and the program doesn't freeze
+
         # Check if the command was successful
         returnlines, errors, = self.current_process.communicate()
-        process = self.current_process
         returncode = self.current_process.returncode
         self.current_process = None
         if returncode != 0:
