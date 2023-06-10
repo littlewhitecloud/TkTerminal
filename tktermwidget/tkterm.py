@@ -172,16 +172,15 @@ class Terminal(Frame):
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
-        cmd = cmd.split("$")[-1]  # Unix
         if SYSTEM == "Windows":
             cmd = cmd.split(">")[-1].strip()
-
+        else:
+            cmd = cmd.split("$")[-1].strip()  # Unix
         # Record the command
         if cmd != "":
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.hi = len(self.historys) - 1
-       else: return "break"
 
         # Check that the insert position is at the end
         if self.text.index("insert") != f"{self.index}.end":
