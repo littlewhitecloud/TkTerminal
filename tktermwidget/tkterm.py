@@ -181,6 +181,7 @@ class Terminal(Frame):
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.hi = len(self.historys) - 1
+       else: return "break"
 
         # Check that the insert position is at the end
         if self.text.index("insert") != f"{self.index}.end":
