@@ -36,7 +36,7 @@ class AutoHideScrollbar(Scrollbar):
     def __init__(self, master=None, **kwargs):
         Scrollbar.__init__(self, master=master, **kwargs)
 
-    def set(self, first, last):
+    def set(self, first: int, last: int):
         if float(first) <= 0.0 and float(last) >= 1.0:
             self.grid_remove()
         else:
