@@ -171,7 +171,7 @@ class Terminal(Frame):
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
-        cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd = cmd.split(">")[-1].strip()
+        cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd.split(">")[-1].strip()
 
         # Record the command
         if cmd != "":
