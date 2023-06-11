@@ -192,7 +192,8 @@ class Terminal(Frame):
             self.directory()
             return "break"
 
-		# Run the command
+        # TODO: Refactor the way we get output from subprocess
+        # Run the command
         self.current_process = Popen(
             cmd,
             shell=True,
