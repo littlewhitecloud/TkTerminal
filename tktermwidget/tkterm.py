@@ -109,7 +109,6 @@ class Terminal(Frame):
         self.text.bind("<Left>", self.left, add=True)
         self.text.bind("<Return>", self.loop, add=True)
         self.text.bind("<BackSpace>", self.left, add=True)
-        self.text.mark_set("io", "end-1c")
 
         # TODO: Refactor the way we get output from subprocess
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
