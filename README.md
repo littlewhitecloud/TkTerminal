@@ -1,6 +1,8 @@
 <h1 align="center"> TkTerminal </h1>
 A terminal emulator written in Python using tkinter
 
+#### 🌏 [简体中文](README_CH.md)
+
 ## Views:
 ### Windows
 <img src="images/windows.png" width="75%" align="center">
