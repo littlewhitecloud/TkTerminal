@@ -1,12 +1,26 @@
 <h1 align="center"> TkTerminal </h1>
-使用 tkinter 用 Python 编写的终端模拟器
 
-## 截图:
+```TkTermianl``` 是一个使用 tkinter 用 Python 编写的终端模拟器
+
 ### Windows
 <img src="images/windows.png" width="75%" align="center">
 
 ### MacOS
 <img src="images/macos.png" width="85%" align="center">
+
+## 特征
+- 用户可以使用他们自己的观点来设置终端控件，就像文本控件一样
+- 用 \ 来输入新行
+- 命令历史记录
+- 等等
+
+## 未来想法
+- 语法高亮
+
+## 安装:
+```batch
+pip install tktermwidget
+```
 
 ## 样例:
 ```python
@@ -52,7 +66,4 @@ root.deiconify()
 root.mainloop()
 ```
 
-## 安装:
-```batch
-pip install tktermwidget
-```
+
