@@ -102,8 +102,9 @@ class Terminal(Frame):
         # Set variables
         self.index = 1
         self.current_process: Popen | None = None
+        self.longsymbol = "\\" if not SYSTEM == "Windows" else "&&"
         self.longcmd = ""
-        self.longflag = True
+        self.longflag = False
         
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
@@ -197,15 +198,17 @@ class Terminal(Frame):
             self.text.delete("1.0", "end")
             self.directory()
             return "break"
-        elif cmd.endswith("\\"):
-            self.longcmd += cmd.split("\\")[0]
+        elif cmd.endswith(self.longsymbol):
+            self.longcmd += cmd.split(self.longsymbol)[0]
             self.newline()
+            self.longflag = True
             return "break"
         
         if self.longflag:
             self.longcmd += cmd
             cmd = self.longcmd
             self.longflag = False
+            self.longcmd = ""
         
         # TODO: Refactor the way we get output from subprocess
         # Run the command
