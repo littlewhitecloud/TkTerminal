@@ -24,11 +24,13 @@ if SYSTEM == "Windows":
 if not HISTORY_PATH.exists():
     HISTORY_PATH.mkdir(parents=True)
     # Also create the history file
-    open(HISTORY_PATH / "history.txt", "w").close()
+    with open(HISTORY_PATH / "history.txt", "w", encoding="utf-8") as f:
+        f.close()
 
 # Check that the history file exists
 if not (HISTORY_PATH / "history.txt").exists():
-    open(HISTORY_PATH / "history.txt", "w").close()
+    with open(HISTORY_PATH / "history.txt", "w", encoding="utf-8") as f:
+        f.close()
 
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
@@ -37,6 +39,7 @@ class AutoHideScrollbar(Scrollbar):
         Scrollbar.__init__(self, master=master, **kwargs)
 
     def set(self, first: int, last: int):
+        """Set the Scrollbar"""
         if float(first) <= 0.0 and float(last) >= 1.0:
             self.grid_remove()
         else:
@@ -59,7 +62,7 @@ class Terminal(Frame):
         up (Event) -> str: Goes up in the history
         down (Event) -> str: Goes down in the history 
         (if the user is at the bottom of the history, it clears the command)
-        left (Event) -> str: Goes left in the command if the index is greater than the length of the directory
+        left (Event) -> str: Goes left in the command if the index is greater than the directory
         (so the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
@@ -102,19 +105,21 @@ class Terminal(Frame):
         # Set variables
         self.index = 1
         self.current_process: Popen | None = None
+        self.longsymbol = "\\" if not SYSTEM == "Windows" else "&&"
+        self.longcmd = ""
+        self.longflag = False
 
-        # Bind events & tags
+        # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
         self.text.bind("<Return>", self.loop, add=True)
         self.text.bind("<BackSpace>", self.left, add=True)
 
-        # TODO: Refactor the way we get output from subprocess
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
         # History recorder
-        self.history = open(HISTORY_PATH / "history.txt", "r+")
+        self.history = open(HISTORY_PATH / "history.txt", "r+", encoding="utf-8")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
 
@@ -126,11 +131,15 @@ class Terminal(Frame):
             f"{DIR.format(command=getcwd())}",
         )
 
+    def newline(self):
+        """Insert a newline"""
+        self.text.insert("insert", "\n")
+        self.index += 1
+
     def up(self, _: Event) -> str:
         """Go up in the history"""
         if self.hi >= 0:
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
@@ -141,7 +150,6 @@ class Terminal(Frame):
         """Go down in the history"""
         if self.hi < len(self.historys) - 1:
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
@@ -149,14 +157,13 @@ class Terminal(Frame):
         else:
             # Clear the command
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
         return "break"
 
     def left(self, _: Event) -> str:
         """Go left in the command if the command is greater than the path"""
         insert_index = self.text.index("insert")
-        dir_index = f"{insert_index.split('.')[0]}.{len(DIR.format(command=getcwd()))}"
+        dir_index = f"{insert_index.split('.', maxsplit=1)[0]}.{len(DIR.format(command=getcwd()))}"
         if insert_index == dir_index:
             return "break"
 
@@ -169,18 +176,35 @@ class Terminal(Frame):
 
     def loop(self, _: Event) -> str:
         """Create an input loop"""
+        # Get the command from the text
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
         cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd.split(">")[-1].strip()
 
+        if self.longflag:
+            self.longcmd += cmd
+            cmd = self.longcmd
+            self.longflag = False
+            self.longcmd = ""
+
+        # Check the command if it is a special command
+        if cmd in ["clear", "cls"]:
+            self.text.delete("1.0", "end")
+            self.directory()
+            return "break"
+        elif cmd.endswith(self.longsymbol):
+            self.longcmd += cmd.split(self.longsymbol)[0]
+            self.newline()
+            self.longflag = True
+            return "break"
+
         # Record the command
-        if cmd != "":
+        if cmd:
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.hi = len(self.historys) - 1
         else:
-            self.text.insert("insert", "\n")
-            self.index += 1
+            self.newline()
             self.directory()
             return "break"
 
@@ -189,12 +213,8 @@ class Terminal(Frame):
             self.text.mark_set("insert", f"{self.index}.end")
             self.text.see("insert")
 
-        # If the command is "clear" or "cls", clear the screen
-        if cmd in ["clear", "cls"]:
-            self.text.delete("1.0", "end")
-            self.directory()
-            return "break"
-
+        # TODO: Refactor the way we get output from subprocess
+        # Run the command
         self.current_process = Popen(
             cmd,
             shell=True,
@@ -202,10 +222,10 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            cwd=getcwd(), # Until a solution for changing the working directory is found, this will have to do
+            cwd=getcwd(), # TODO: use dynamtic path instead
             creationflags=CREATE_NEW_CONSOLE,
         )
-        # The following needs to be put in an after so the kill command works and the program doesn't freeze
+        # The following needs to be put in an after so the kill command works
 
         # Check if the command was successful
         returnlines, errors, = self.current_process.communicate()
@@ -213,10 +233,10 @@ class Terminal(Frame):
         self.current_process = None
         if returncode != 0:
             returnlines += errors # If the command was unsuccessful, it doesn't give stdout
-            # TODO: Get the success message from the command (see #16)
+        # TODO: Get the success message from the command (see #16)
 
-        self.text.insert("insert", "\n")
-        self.index += 1
+		# Output to the text
+        self.newline()
         for line in returnlines:
             self.text.insert("insert", line)
             if line == "\n":
