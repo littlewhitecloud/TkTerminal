@@ -102,7 +102,9 @@ class Terminal(Frame):
         # Set variables
         self.index = 1
         self.current_process: Popen | None = None
-
+        self.longcmd = ""
+        self.longflag = True
+        
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
@@ -124,7 +126,12 @@ class Terminal(Frame):
             "insert",
             f"{DIR.format(command=getcwd())}",
         )
-
+    
+    def newline(self):
+        """Insert a newline"""
+        self.text.insert("insert", "\n")
+        self.index += 1
+    
     def up(self, _: Event) -> str:
         """Go up in the history"""
         if self.hi >= 0:
@@ -172,8 +179,7 @@ class Terminal(Frame):
 
         # Record the command
         if not cmd:
-            self.text.insert("insert", "\n")
-            self.index += 1
+            self.newline()
             self.directory()
             return "break"
         else:
@@ -191,7 +197,16 @@ class Terminal(Frame):
             self.text.delete("1.0", "end")
             self.directory()
             return "break"
-
+        elif cmd.endswith("\\"):
+            self.longcmd += cmd.split("\\")[0]
+            self.newline()
+            return "break"
+        
+        if self.longflag:
+            self.longcmd += cmd
+            cmd = self.longcmd
+            self.longflag = False
+        
         # TODO: Refactor the way we get output from subprocess
         # Run the command
         self.current_process = Popen(
@@ -215,12 +230,10 @@ class Terminal(Frame):
         # TODO: Get the success message from the command (see #16)
 
 		# Output to the text
-        self.text.insert("insert", "\n")
-        self.index += 1
+        self.newline()
         for line in returnlines:
             self.text.insert("insert", line)
-            if line == "\n":
-                self.index += 1
+            if line == "\n": self.index += 1
 
         self.directory()
         return "break"  # Prevent the default newline character insertion
