@@ -1,14 +1,27 @@
 <h1 align="center"> TkTerminal </h1>
-A terminal emulator written in Python using tkinter
 
-#### 🌏 [简体中文](README_CH.md)
+### 🌏 [简体中文](README_CH.md)
 
-## Views:
+```TkTerminal``` is a terminal emulator written in Python using tkinter. It is quite easy to use.
 ### Windows
 <img src="images/windows.png" width="75%" align="center">
 
 ### MacOS
 <img src="images/macos.png" width="85%" align="center">
+
+## Features
+- User can set the terminal widget with their own options
+- Use \ to make new lines
+- Command history recorder
+- And some on
+
+## Future ideas
+- Highlight
+
+## Installation:
+```batch
+pip install tktermwidget
+```
 
 ## Example:
 ```python
@@ -53,7 +66,3 @@ root.deiconify()
 root.mainloop()
 ```
 
-## Install:
-```batch
-pip install tktermwidget
-```
