@@ -11,7 +11,7 @@
 
 ## Features
 - User can set the terminal widget with their own options
-- Use \ to make new lines
+- Use \ to make new lines (On Windows it is &&)
 - Command history recorder
 - And some on
 
