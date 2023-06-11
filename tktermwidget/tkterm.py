@@ -118,6 +118,7 @@ class Terminal(Frame):
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
 
+
     def directory(self):
         """Insert the directory"""
         self.text.insert(
@@ -170,10 +171,7 @@ class Terminal(Frame):
         """Create an input loop"""
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
-        if SYSTEM == "Windows":
-            cmd = cmd.split(">")[-1].strip()
-        else:
-            cmd = cmd.split("$")[-1].strip()  # Unix
+        cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd = cmd.split(">")[-1].strip()
 
         # Record the command
         if cmd != "":
