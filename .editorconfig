@@ -4,9 +4,17 @@ root = true
 charset = utf-8
 insert_final_newline = true
 
-[*.py]
+# Special file
+[tktermwidget/term.py]
 indent_style = space
 indent_size = 4
 end_of_line = lf
 trim_trailing_whitespace = true
 max_line_length = 125
+
+[tktermwidget/__init__.py]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+trim_trailing_whitespace = true
+max_line_length = 88

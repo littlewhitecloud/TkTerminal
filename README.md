@@ -1,6 +1,5 @@
-# `tkterm`
-
-> A terminal emulator written in Python using tkinter
+# TkTerminal
+A terminal emulator written in Python using tkinter
 
 ## Views:
 ### Windows
@@ -56,6 +55,3 @@ root.mainloop()
 ```batch
 pip install tktermwidget
 ```
-
-### Coming soon
-
