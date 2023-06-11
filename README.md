@@ -1,9 +1,9 @@
-# TkTerminal
+<h1 align="center"> TkTerminal </h1>
 A terminal emulator written in Python using tkinter
 
 ## Views:
 ### Windows
-<img src="images/windows.png" width="85%" align="center">
+<img src="images/windows.png" width="75%" align="center">
 
 ### MacOS
 <img src="images/macos.png" width="85%" align="center">
