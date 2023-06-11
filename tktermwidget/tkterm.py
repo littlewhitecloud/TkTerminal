@@ -103,14 +103,13 @@ class Terminal(Frame):
         self.index = 1
         self.current_process: Popen | None = None
 
-        # Bind events & tags
+        # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Left>", self.left, add=True)
         self.text.bind("<Return>", self.loop, add=True)
         self.text.bind("<BackSpace>", self.left, add=True)
 
-        # TODO: Refactor the way we get output from subprocess
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
         # History recorder
@@ -130,7 +129,6 @@ class Terminal(Frame):
         """Go up in the history"""
         if self.hi >= 0:
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
@@ -141,7 +139,6 @@ class Terminal(Frame):
         """Go down in the history"""
         if self.hi < len(self.historys) - 1:
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
             # Insert the command
             self.text.insert("insert", self.historys[self.hi].strip())
@@ -149,7 +146,6 @@ class Terminal(Frame):
         else:
             # Clear the command
             self.text.delete(f"{self.index}.0", "end-1c")
-            # Insert the directory
             self.directory()
         return "break"
 
@@ -169,32 +165,34 @@ class Terminal(Frame):
 
     def loop(self, _: Event) -> str:
         """Create an input loop"""
+        # Get the command from the text
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Determine command based on system
         cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd.split(">")[-1].strip()
 
         # Record the command
-        if cmd != "":
-            self.history.write(cmd + "\n")
-            self.historys.append(cmd)
-            self.hi = len(self.historys) - 1
-        else:
+        if not cmd:
             self.text.insert("insert", "\n")
             self.index += 1
             self.directory()
             return "break"
+        else:
+            self.history.write(cmd + "\n")
+            self.historys.append(cmd)
+            self.hi = len(self.historys) - 1
 
         # Check that the insert position is at the end
         if self.text.index("insert") != f"{self.index}.end":
             self.text.mark_set("insert", f"{self.index}.end")
             self.text.see("insert")
 
-        # If the command is "clear" or "cls", clear the screen
+        # Check the command if it is a special command
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.directory()
             return "break"
 
+		# Run the command
         self.current_process = Popen(
             cmd,
             shell=True,
@@ -202,7 +200,7 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            cwd=getcwd(), # Until a solution for changing the working directory is found, this will have to do
+            cwd=getcwd(), # TODO: use dynamtic path instead
             creationflags=CREATE_NEW_CONSOLE,
         )
         # The following needs to be put in an after so the kill command works and the program doesn't freeze
@@ -213,8 +211,9 @@ class Terminal(Frame):
         self.current_process = None
         if returncode != 0:
             returnlines += errors # If the command was unsuccessful, it doesn't give stdout
-            # TODO: Get the success message from the command (see #16)
+        # TODO: Get the success message from the command (see #16)
 
+		# Output to the text
         self.text.insert("insert", "\n")
         self.index += 1
         for line in returnlines:
