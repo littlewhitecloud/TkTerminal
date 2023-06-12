@@ -112,9 +112,9 @@ class Terminal(Frame):
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
-        self.text.bind("<Left>", self.left, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-        self.text.bind("<BackSpace>", self.left, add=True)
+        for bind_str in ("<Left>", "<BackSpace>"):
+            self.text.bind(bind_str, self.left, add=True)
 
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
