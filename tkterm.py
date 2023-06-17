@@ -59,7 +59,7 @@ class Terminal(Frame):
 
     Methods for internal use:
         up (Event) -> str: Goes up in the history
-        down (Event) -> str: Goes down in the history 
+        down (Event) -> str: Goes down in the history
         (if the user is at the bottom of the history, it clears the command)
         left (Event) -> str: Goes left in the command if the index is greater than the directory
         (so the user can't delete the directory or go left of it)
@@ -253,7 +253,7 @@ class Terminal(Frame):
         # Update the text and the index
         self.directory()
         self.updates(None)
-        self.latest = self.text.index("insert")        
+        self.latest = self.text.index("insert")
         return "break"  # Prevent the default newline character insertion
 
 
