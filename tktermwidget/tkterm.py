@@ -200,13 +200,12 @@ class Terminal(Frame):
             self.updates(None)
             self.latest = self.text.index("insert")
             return "break"
-        elif cmd.endswith(self.longsymbol):
+
+        if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
             self.longflag = True
             self.newline()
             return "break"
-        else:
-            pass
 
         if cmd: # Record the command if it isn't empty
             self.history.write(cmd + "\n")
