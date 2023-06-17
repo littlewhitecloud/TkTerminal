@@ -11,13 +11,12 @@ from tkinter.ttk import Frame, Scrollbar
 from platformdirs import user_cache_dir
 
 # Set constants
-HISTORY_PATH = Path(user_cache_dir("tkterm"))
+HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 SYSTEM = system()
 CREATE_NEW_CONSOLE = 0
 DIR = "{command}$ "
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
-
     DIR = "PS {command}>"
 
 # Check that the history directory exists
@@ -60,7 +59,7 @@ class Terminal(Frame):
 
     Methods for internal use:
         up (Event) -> str: Goes up in the history
-        down (Event) -> str: Goes down in the history 
+        down (Event) -> str: Goes down in the history
         (if the user is at the bottom of the history, it clears the command)
         left (Event) -> str: Goes left in the command if the index is greater than the directory
         (so the user can't delete the directory or go left of it)
@@ -103,11 +102,12 @@ class Terminal(Frame):
         self.directory()
 
         # Set variables
-        self.index = 1
-        self.current_process: Popen | None = None
         self.longsymbol = "\\" if not SYSTEM == "Windows" else "&&"
-        self.longcmd = ""
+        self.index, self.cursor = 1, self.text.index("insert")
+        self.current_process: Popen | None = None
+        self.latest = self.cursor
         self.longflag = False
+        self.longcmd = ""
 
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
@@ -115,6 +115,8 @@ class Terminal(Frame):
         self.text.bind("<Return>", self.loop, add=True)
         for bind_str in ("<Left>", "<BackSpace>"):
             self.text.bind(bind_str, self.left, add=True)
+        for bind_str in ("<Return>", "<ButtonRelease-1>"):
+            self.text.bind(bind_str, self.updates, add = True)
 
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
@@ -123,15 +125,19 @@ class Terminal(Frame):
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.hi = len(self.historys) - 1
 
+    def updates(self, _) -> None:
+        """Update cursor"""
+        self.cursor = self.text.index("insert")
+        if self.cursor < self.latest and self.text["state"] != "disabled": # It is lower than the path index
+            self.text["state"] = "disabled"
+        elif self.cursor >= self.latest and self.text["state"] != "normal":
+            self.text["state"] = "normal"
 
-    def directory(self):
+    def directory(self) -> None:
         """Insert the directory"""
-        self.text.insert(
-            "insert",
-            f"{DIR.format(command=getcwd())}",
-        )
+        self.text.insert("insert", f"{DIR.format(command=getcwd())}")
 
-    def newline(self):
+    def newline(self) -> None:
         """Insert a newline"""
         self.text.insert("insert", "\n")
         self.index += 1
@@ -184,26 +190,29 @@ class Terminal(Frame):
         if self.longflag:
             self.longcmd += cmd
             cmd = self.longcmd
-            self.longflag = False
             self.longcmd = ""
+            self.longflag = False
 
         # Check the command if it is a special command
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.directory()
+            self.updates(None)
+            self.latest = self.text.index("insert")
             return "break"
         elif cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
-            self.newline()
             self.longflag = True
+            self.newline()
             return "break"
+        else:
+            pass
 
-        # Record the command
-        if cmd:
+        if cmd: # Record the command if it isn't empty
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.hi = len(self.historys) - 1
-        else:
+        else: # Leave the loop
             self.newline()
             self.directory()
             return "break"
@@ -222,7 +231,7 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            cwd=getcwd(), # TODO: use dynamtic path instead
+            cwd=getcwd(), # TODO: use dynamtic path instead (see #35)
             creationflags=CREATE_NEW_CONSOLE,
         )
         # The following needs to be put in an after so the kill command works
@@ -234,15 +243,17 @@ class Terminal(Frame):
         if returncode != 0:
             returnlines += errors # If the command was unsuccessful, it doesn't give stdout
         # TODO: Get the success message from the command (see #16)
-
-		# Output to the text
+        # Output to the text
         self.newline()
         for line in returnlines:
             self.text.insert("insert", line)
             if line == "\n":
                 self.index += 1
 
+        # Update the text and the index
         self.directory()
+        self.updates(None)
+        self.latest = self.text.index("insert")
         return "break"  # Prevent the default newline character insertion
 
 
