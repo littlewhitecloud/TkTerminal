@@ -14,10 +14,10 @@ from platformdirs import user_cache_dir
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 SYSTEM = system()
 CREATE_NEW_CONSOLE = 0
-DIR = "{command}$ "
+SIGN = "$ "
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
-    DIR = "{command}>"
+    SIGN = ">"
 
 # Check that the history directory exists
 if not HISTORY_PATH.exists():
@@ -113,6 +113,7 @@ class Terminal(Frame):
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Return>", self.loop, add=True)
+
         for bind_str in ("<Left>", "<BackSpace>"):
             self.text.bind(bind_str, self.left, add=True)
         for bind_str in ("<Return>", "<ButtonRelease-1>"):
@@ -128,14 +129,14 @@ class Terminal(Frame):
     def updates(self, _) -> None:
         """Update cursor"""
         self.cursor = self.text.index("insert")
-        if self.cursor < self.latest and self.text["state"] != "disabled": # It is lower than the path index
+        if self.cursor < self.latest and self.text["state"] != "disabled":
             self.text["state"] = "disabled"
         elif self.cursor >= self.latest and self.text["state"] != "normal":
             self.text["state"] = "normal"
 
     def directory(self) -> None:
         """Insert the directory"""
-        self.text.insert("insert", f"{DIR.format(command=getcwd())}")
+        self.text.insert("insert", getcwd() + SIGN)
 
     def newline(self) -> None:
         """Insert a newline"""
@@ -169,7 +170,7 @@ class Terminal(Frame):
     def left(self, _: Event) -> str:
         """Go left in the command if the command is greater than the path"""
         insert_index = self.text.index("insert")
-        dir_index = f"{insert_index.split('.', maxsplit=1)[0]}.{len(DIR.format(command=getcwd()))}"
+        dir_index = f"{insert_index.split('.', maxsplit=1)[0]}.{len(getcwd() + SIGN)}"
         if insert_index == dir_index:
             return "break"
 
@@ -184,8 +185,7 @@ class Terminal(Frame):
         """Create an input loop"""
         # Get the command from the text
         cmd = self.text.get(f"{self.index}.0", "end-1c")
-        # Determine command based on system
-        cmd = cmd.split("$")[-1].strip() if not SYSTEM == "Windows" else cmd.split(">")[-1].strip()
+        cmd = cmd.split(SIGN)[-1].strip()
 
         if self.longflag:
             self.longcmd += cmd
