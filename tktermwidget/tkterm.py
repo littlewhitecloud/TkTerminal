@@ -124,7 +124,7 @@ class Terminal(Frame):
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt", "r+", encoding="utf-8")
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
-        self.hi = len(self.historys) - 1
+        self.historyindex = len(self.historys) - 1
 
     def updates(self, _) -> None:
         """Update cursor"""
@@ -145,22 +145,22 @@ class Terminal(Frame):
 
     def up(self, _: Event) -> str:
         """Go up in the history"""
-        if self.hi >= 0:
+        if self.historyindex >= 0:
             self.text.delete(f"{self.index}.0", "end-1c")
             self.directory()
             # Insert the command
-            self.text.insert("insert", self.historys[self.hi].strip())
-            self.hi -= 1
+            self.text.insert("insert", self.historys[self.historyindex].strip())
+            self.historyindex -= 1
         return "break"
 
     def down(self, _: Event) -> str:
         """Go down in the history"""
-        if self.hi < len(self.historys) - 1:
+        if self.historyindex < len(self.historys) - 1:
             self.text.delete(f"{self.index}.0", "end-1c")
             self.directory()
             # Insert the command
-            self.text.insert("insert", self.historys[self.hi].strip())
-            self.hi += 1
+            self.text.insert("insert", self.historys[self.historyindex].strip())
+            self.historyindex += 1
         else:
             # Clear the command
             self.text.delete(f"{self.index}.0", "end-1c")
@@ -210,7 +210,7 @@ class Terminal(Frame):
         if cmd: # Record the command if it isn't empty
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
-            self.hi = len(self.historys) - 1
+            self.historyindex = len(self.historys) - 1
         else: # Leave the loop
             self.newline()
             self.directory()
