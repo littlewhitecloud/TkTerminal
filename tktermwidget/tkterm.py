@@ -66,7 +66,7 @@ class Terminal(Frame):
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
-    def __init__(self, master: Misc, autohide: bool, *args, **kwargs):
+    def __init__(self, master: Misc, autohide: bool = False, *args, **kwargs):
         Frame.__init__(self, master)
 
         # Set row and column weights
