@@ -1,3 +1,4 @@
+"""An example for tktermwidget"""
 from tkinter import Tk
 
 from tktermwidget import Terminal

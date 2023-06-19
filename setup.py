@@ -1,3 +1,4 @@
+"""Setup for tktermwidget"""
 from distutils.core import setup
 
 with open("README.md", "r") as file:

@@ -4,9 +4,10 @@ from __future__ import annotations
 from os import getcwd
 from pathlib import Path
 from platform import system
+from subprocess import CREATE_NEW_CONSOLE, PIPE, Popen
+
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
-from subprocess import PIPE, Popen, CREATE_NEW_CONSOLE
 
 from platformdirs import user_cache_dir
 
@@ -31,6 +32,7 @@ if not (HISTORY_PATH / "history.txt").exists():
     with open(HISTORY_PATH / "history.txt", "w", encoding="utf-8") as f:
         f.close()
 
+
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
 
@@ -44,6 +46,7 @@ class AutoHideScrollbar(Scrollbar):
         else:
             self.grid()
         Scrollbar.set(self, first, last)
+
 
 class Terminal(Frame):
     """A terminal widget for tkinter applications
@@ -117,9 +120,9 @@ class Terminal(Frame):
         for bind_str in ("<Left>", "<BackSpace>"):
             self.text.bind(bind_str, self.left, add=True)
         for bind_str in ("<Return>", "<ButtonRelease-1>"):
-            self.text.bind(bind_str, self.updates, add = True)
+            self.text.bind(bind_str, self.updates, add=True)
 
-        self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
+        self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
         # History recorder
         self.history = open(HISTORY_PATH / "history.txt" if not filehistory else filehistory, "r+", encoding="utf-8")
@@ -210,11 +213,11 @@ class Terminal(Frame):
             self.newline()
             return "break"
 
-        if cmd: # Record the command if it isn't empty
+        if cmd:  # Record the command if it isn't empty
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
             self.historyindex = len(self.historys) - 1
-        else: # Leave the loop
+        else:  # Leave the loop
             self.newline()
             self.directory()
             return "break"
@@ -233,17 +236,20 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            cwd=getcwd(), # TODO: use dynamtic path instead (see #35)
+            cwd=getcwd(),  # TODO: use dynamtic path instead (see #35)
             creationflags=CREATE_NEW_CONSOLE,
         )
         # The following needs to be put in an after so the kill command works
 
         # Check if the command was successful
-        returnlines, errors, = self.current_process.communicate()
+        (
+            returnlines,
+            errors,
+        ) = self.current_process.communicate()
         returncode = self.current_process.returncode
         self.current_process = None
         if returncode != 0:
-            returnlines += errors # If the command was unsuccessful, it doesn't give stdout
+            returnlines += errors  # If the command was unsuccessful, it doesn't give stdout
         # TODO: Get the success message from the command (see #16)
         # Output to the text
         self.newline()
