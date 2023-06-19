@@ -17,7 +17,7 @@ CREATE_NEW_CONSOLE = 0
 DIR = "{command}$ "
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
-    DIR = "PS {command}>"
+    DIR = "{command}>"
 
 # Check that the history directory exists
 if not HISTORY_PATH.exists():
