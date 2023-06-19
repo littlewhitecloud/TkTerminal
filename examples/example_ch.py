@@ -1,4 +1,3 @@
-# -*- coding: gbk -*-
 from tkinter import Tk
 
 from tktermwidget import Terminal
