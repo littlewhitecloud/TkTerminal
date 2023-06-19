@@ -4,20 +4,20 @@ from __future__ import annotations
 from os import getcwd
 from pathlib import Path
 from platform import system
-from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
+from subprocess import PIPE, Popen, CREATE_NEW_CONSOLE
 
 from platformdirs import user_cache_dir
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 SYSTEM = system()
-CREATE_NEW_CONSOLE = 0
-SIGN = "$ "
 if SYSTEM == "Windows":
-    from subprocess import CREATE_NEW_CONSOLE
     SIGN = ">"
+else:
+    CREATE_NEW_CONSOLE = 0
+    SIGN = "$ "
 
 # Check that the history directory exists
 if not HISTORY_PATH.exists():
@@ -66,7 +66,7 @@ class Terminal(Frame):
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
-    def __init__(self, master: Misc, autohide: bool = False, *args, **kwargs):
+    def __init__(self, master: Misc, filehistory: str = None, autohide: bool = False, *args, **kwargs):
         Frame.__init__(self, master)
 
         # Set row and column weights
@@ -122,7 +122,8 @@ class Terminal(Frame):
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True) # Isn't working
 
         # History recorder
-        self.history = open(HISTORY_PATH / "history.txt", "r+", encoding="utf-8")
+        self.history = open(HISTORY_PATH / "history.txt" if not filehistory else filehistory, "r+", encoding="utf-8")
+
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.historyindex = len(self.historys) - 1
 
@@ -200,6 +201,8 @@ class Terminal(Frame):
             self.updates(None)
             self.latest = self.text.index("insert")
             return "break"
+        elif cmd == "exit":
+            self.master.quit()
 
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
