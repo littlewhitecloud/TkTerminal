@@ -50,7 +50,7 @@ class Terminal(Frame):
 
     Args:
         master (Misc): The parent widget
-        autohide (bool, optional): Whether to autohide the scrollbars. Defaults to True.
+        autohide (bool, optional): Whether to autohide the scrollbars. Set true to enable it.
         *args: Arguments for the text widget
         **kwargs: Keyword arguments for the text widget
 
