@@ -262,6 +262,8 @@ class Terminal(Frame):
         self.directory()
         self.updates(None)
         self.latest = self.text.index("insert")
+        # Warp to the end
+        self.text.see("end")
         return "break"  # Prevent the default newline character insertion
 
 
