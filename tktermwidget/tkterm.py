@@ -5,7 +5,6 @@ from os import getcwd
 from pathlib import Path
 from platform import system
 from subprocess import CREATE_NEW_CONSOLE, PIPE, Popen
-
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
@@ -69,7 +68,14 @@ class Terminal(Frame):
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
-    def __init__(self, master: Misc, filehistory: str = None, autohide: bool = False, *args, **kwargs):
+    def __init__(
+        self,
+        master: Misc,
+        filehistory: str = None,
+        autohide: bool = False,
+        *args,
+        **kwargs,
+    ):
         Frame.__init__(self, master)
 
         # Set row and column weights
@@ -98,7 +104,8 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-        self.xscroll.grid(row=1, column=0, sticky="ew")
+        if kwargs.get("warp", "char") != "char":
+            self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
 
         # Create command prompt
@@ -125,7 +132,11 @@ class Terminal(Frame):
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
         # History recorder
-        self.history = open(HISTORY_PATH / "history.txt" if not filehistory else filehistory, "r+", encoding="utf-8")
+        self.history = open(
+            HISTORY_PATH / "history.txt" if not filehistory else filehistory,
+            "r+",
+            encoding="utf-8",
+        )
 
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.historyindex = len(self.historys) - 1
@@ -262,7 +273,6 @@ class Terminal(Frame):
         self.directory()
         self.updates(None)
         self.latest = self.text.index("insert")
-        # Warp to the end
         self.text.see("end")
         return "break"  # Prevent the default newline character insertion
 
