@@ -1,5 +1,8 @@
 <h1 align="center"> TkTerminal </h1>
 
+[![PyPI](https://img.shields.io/pypi/v/tktermwidget)](https://pypi.org/project/tktermwidget)
+![Platform](https://img.shields.io/powershellgallery/p/Pester?color=blue)
+
 ```TkTermianl``` 是一个使用 tkinter 用 Python 编写的终端模拟器
 
 ### Windows
