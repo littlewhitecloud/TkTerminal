@@ -1,5 +1,8 @@
 <h1 align="center"> TkTerminal </h1>
 
+[![PyPI](https://img.shields.io/pypi/v/tktermwidget)](https://pypi.org/project/tktermwidget)
+![Platform](https://img.shields.io/powershellgallery/p/Pester?color=blue)
+
 ### 🌏 [简体中文](README_CH.md)
 
 ```TkTerminal``` is a terminal emulator written in Python using tkinter. It is quite easy to use.
