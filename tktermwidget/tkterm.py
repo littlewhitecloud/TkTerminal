@@ -104,7 +104,7 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-        if kwargs.get("warp", "char") != "char":
+        if kwargs.get("warp", "char") == "none":
             self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
 
