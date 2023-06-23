@@ -104,7 +104,7 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-        if kwargs.get("warp", "char") == "none":
+        if kwargs.get("wrap", "char") == "none":
             self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
 
@@ -231,6 +231,7 @@ class Terminal(Frame):
         else:  # Leave the loop
             self.newline()
             self.directory()
+            self.text.see("end")
             return "break"
 
         # Check that the insert position is at the end
