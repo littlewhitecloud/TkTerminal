@@ -1,7 +1,7 @@
 """Terminal widget for tkinter"""
 from __future__ import annotations
 
-from os import getcwd
+from os import chdir, getcwd
 from pathlib import Path
 from platform import system
 from subprocess import CREATE_NEW_CONSOLE, PIPE, Popen
@@ -112,11 +112,11 @@ class Terminal(Frame):
         self.directory()
 
         # Set variables
-        self.longsymbol = "\\" if not SYSTEM == "Windows" else "&&"
+        self.longsymbol = "\\" if not SYSTEM == "Windows" else "\\"
         self.index, self.cursor = 1, self.text.index("insert")
         self.current_process: Popen | None = None
         self.latest = self.cursor
-        self.longflag = False
+        self.longflag, self.click = False, False
         self.longcmd = ""
 
         # Bind events
@@ -141,13 +141,15 @@ class Terminal(Frame):
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.historyindex = len(self.historys) - 1
 
-    def updates(self, _) -> None:
+    def updates(self, _: Event) -> None:
         """Update cursor"""
         self.cursor = self.text.index("insert")
-        if self.cursor < self.latest and self.text["state"] != "disabled":
-            self.text["state"] = "disabled"
-        elif self.cursor >= self.latest and self.text["state"] != "normal":
-            self.text["state"] = "normal"
+        if float(self.cursor) < float(self.latest):
+            self.text.bind("<KeyPress>", self.eat, True)
+            self.text.bind("<KeyPress-BackSpace>", self.eat, True)
+        elif float(self.cursor) >= float(self.latest):
+            self.text.unbind("<Key>")
+            self.text.unbind("<KeyPress-Backspace>")
 
     def directory(self) -> None:
         """Insert the directory"""
@@ -157,6 +159,10 @@ class Terminal(Frame):
         """Insert a newline"""
         self.text.insert("insert", "\n")
         self.index += 1
+
+    def eat(self, _: Event) -> str:
+        """Just eat"""
+        return "break"
 
     def up(self, _: Event) -> str:
         """Go up in the history"""
@@ -196,6 +202,14 @@ class Terminal(Frame):
             self.current_process = None
         return "break"
 
+    def ignore(self) -> str:
+        """the command didn't need a output but need update"""
+        self.directory()
+        self.updates(None)
+        self.latest = self.text.index("insert")
+        self.text.see("end")
+        return "break"
+
     def loop(self, _: Event) -> str:
         """Create an input loop"""
         # Get the command from the text
@@ -212,11 +226,13 @@ class Terminal(Frame):
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.directory()
-            self.updates(None)
-            self.latest = self.text.index("insert")
             return "break"
         elif cmd == "exit":
             self.master.quit()
+        elif cmd.startswith("cd"):
+            chdir(cmd.split()[-1])
+            self.newline()
+            self.ignore()
 
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
@@ -248,6 +264,8 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
+            bufsize=1,
+            universal_newlines=True,
             cwd=getcwd(),  # TODO: use dynamtic path instead (see #35)
             creationflags=CREATE_NEW_CONSOLE,
         )
