@@ -116,7 +116,7 @@ class Terminal(Frame):
         self.index, self.cursor = 1, self.text.index("insert")
         self.current_process: Popen | None = None
         self.latest = self.cursor
-        self.longflag, self.click = False, False
+        self.longflag = False
         self.longcmd = ""
 
         # Bind events
