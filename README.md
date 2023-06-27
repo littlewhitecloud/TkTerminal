@@ -16,10 +16,16 @@
 - User can set the terminal widget with their own options
 - Use \ to make new lines (On Windows it is &&)
 - Command history recorder
+- Styles
 - And some on
 
 ## Future ideas
 - Highlight
+
+## Styles
+```tkterminalwidget``` also have some styles to use such as ```Powershell``` ```Command```:
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/3affd018-0408-4e91-96de-4775937e0ab8)
+
 
 ## Installation:
 ```batch
