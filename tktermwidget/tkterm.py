@@ -13,9 +13,11 @@ from style import Default
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
+HISTORY_FILE = HISTORY_PATH / "history.txt"
 SYSTEM = system()
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
+
     SIGN = ">"
 else:
     CREATE_NEW_CONSOLE = 0
@@ -25,12 +27,12 @@ else:
 if not HISTORY_PATH.exists():
     HISTORY_PATH.mkdir(parents=True)
     # Also create the history file
-    with open(HISTORY_PATH / "history.txt", "w", encoding="utf-8") as f:
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         f.close()
 
 # Check that the history file exists
-if not (HISTORY_PATH / "history.txt").exists():
-    with open(HISTORY_PATH / "history.txt", "w", encoding="utf-8") as f:
+if not (HISTORY_FILE).exists():
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         f.close()
 
 
@@ -54,7 +56,8 @@ class Terminal(Frame):
 
     Args:
         master (Misc): The parent widget
-        autohide (bool, optional): Whether to autohide the scrollbars. Set true to enable it.
+        autohide (bool, optional): Whether to autohide the scrollbars.
+        (Set true to enable it.)
         *args: Arguments for the text widget
         **kwargs: Keyword arguments for the text widget
 
@@ -64,9 +67,9 @@ class Terminal(Frame):
     Methods for internal use:
         up (Event) -> str: Goes up in the history
         down (Event) -> str: Goes down in the history
-        (if the user is at the bottom of the history, it clears the command)
+        (If the user is at the bottom of the history, it clears the command)
         left (Event) -> str: Goes left in the command if the index is greater than the directory
-        (so the user can't delete the directory or go left of it)
+        (So the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
@@ -122,7 +125,8 @@ class Terminal(Frame):
         self.index: int = 1
         self.cursor: int = self.text.index("insert")
         self.longsymbol: str = "\\" if not SYSTEM == "Windows" else "&&"
-        self.longcmd: str = "" 
+        self.longcmd: str = ""
+        self.filehistory: str = HISTORY_FILE if not filehistory else filehistory
 
         self.latest: int = self.cursor
 
@@ -138,7 +142,7 @@ class Terminal(Frame):
 
         # History recorder
         self.history = open(
-            HISTORY_PATH / "history.txt" if not filehistory else filehistory,
+            self.filehistory,
             "r+",
             encoding="utf-8",
         )
