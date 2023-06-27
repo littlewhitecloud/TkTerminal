@@ -1,7 +1,7 @@
 """Terminal widget for tkinter"""
 from __future__ import annotations
 
-from os import chdir, getcwd
+from os import getcwd
 from pathlib import Path
 from platform import system
 from subprocess import PIPE, Popen
@@ -15,6 +15,7 @@ from style import Default
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 SYSTEM = system()
 if SYSTEM == "Windows":
+    from subprocess import CREATE_NEW_CONSOLE
     SIGN = ">"
 else:
     CREATE_NEW_CONSOLE = 0
@@ -107,6 +108,7 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
+
         if kwargs.get("wrap", "char") == "none":
             self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
@@ -115,23 +117,21 @@ class Terminal(Frame):
         self.directory()
 
         # Set variables
-        self.longsymbol = "\\" if not SYSTEM == "Windows" else "\\"
-        self.index, self.cursor = 1, self.text.index("insert")
-        self.current_process: Popen | None = None
-        self.latest = self.cursor
         self.longflag = False
-        self.longcmd = ""
+        self.current_process: Popen | None = None
+        self.index, self.cursor = 1, self.text.index("insert")
+        self.longsymbol, self.longcmd = "\\" if not SYSTEM == "Windows" else "&&", ""
+
+        self.latest = self.cursor
 
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
         self.text.bind("<Return>", self.loop, add=True)
-
         for bind_str in ("<Left>", "<BackSpace>"):
             self.text.bind(bind_str, self.left, add=True)
         for bind_str in ("<Return>", "<ButtonRelease-1>"):
             self.text.bind(bind_str, self.updates, add=True)
-
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
         # History recorder
@@ -206,7 +206,7 @@ class Terminal(Frame):
         return "break"
 
     def ignore(self) -> str:
-        """the command didn't need a output but need update"""
+        """Update or the command has no output"""
         self.directory()
         self.updates(None)
         self.latest = self.text.index("insert")
@@ -225,18 +225,6 @@ class Terminal(Frame):
             self.longcmd = ""
             self.longflag = False
 
-        # Check the command if it is a special command
-        if cmd in ["clear", "cls"]:
-            self.text.delete("1.0", "end")
-            self.directory()
-            return "break"
-        elif cmd == "exit":
-            self.master.quit()
-        elif cmd.startswith("cd"):
-            chdir(cmd.split()[-1])
-            self.newline()
-            self.ignore()
-
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
             self.longflag = True
@@ -252,6 +240,14 @@ class Terminal(Frame):
             self.directory()
             self.text.see("end")
             return "break"
+
+        # Check the command if it is a special command
+        if cmd in ["clear", "cls"]:
+            self.text.delete("1.0", "end")
+            self.directory()
+            return "break"
+        elif cmd == "exit":
+            self.master.quit()
 
         # Check that the insert position is at the end
         if self.text.index("insert") != f"{self.index}.end":
@@ -292,10 +288,7 @@ class Terminal(Frame):
                 self.index += 1
 
         # Update the text and the index
-        self.directory()
-        self.updates(None)
-        self.latest = self.text.index("insert")
-        self.text.see("end")
+        self.ignore()
         return "break"  # Prevent the default newline character insertion
 
 
