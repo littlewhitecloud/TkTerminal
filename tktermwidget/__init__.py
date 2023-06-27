@@ -1,2 +1,2 @@
 """Tktermwidget package"""
-from .tkterm import Terminal # noqa: F401
+from .tkterm import Terminal  # noqa: F401

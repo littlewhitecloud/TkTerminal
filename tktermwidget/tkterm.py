@@ -9,6 +9,7 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
+from style import Default
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
@@ -71,6 +72,7 @@ class Terminal(Frame):
     def __init__(
         self,
         master: Misc,
+        style: dict = Default,
         filehistory: str = None,
         autohide: bool = False,
         *args,
@@ -89,11 +91,12 @@ class Terminal(Frame):
         self.text = Text(
             self,
             *args,
-            background=kwargs.get("background", "#2B2B2B"),
-            insertbackground=kwargs.get("insertbackground", "#DCDCDC"),
-            selectbackground=kwargs.get("selectbackground", "#b4b3b3"),
+            background=kwargs.get("background", style["background"]),
+            insertbackground=kwargs.get("insertbackground", style["insertbackground"]),
+            selectbackground=kwargs.get("selectbackground", style["selectbackground"]),
+            selectforeground=kwargs.get("selectforeground", style["selectforeground"]),
             relief=kwargs.get("relief", "flat"),
-            foreground=kwargs.get("foreground", "#cccccc"),
+            foreground=kwargs.get("foreground", style["foreground"]),
             xscrollcommand=self.xscroll.set,
             yscrollcommand=self.yscroll.set,
             wrap=kwargs.get("wrap", "char"),
