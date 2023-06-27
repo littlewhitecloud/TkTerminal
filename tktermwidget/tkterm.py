@@ -117,12 +117,14 @@ class Terminal(Frame):
         self.directory()
 
         # Set variables
-        self.longflag = False
+        self.longflag: bool = False
         self.current_process: Popen | None = None
-        self.index, self.cursor = 1, self.text.index("insert")
-        self.longsymbol, self.longcmd = "\\" if not SYSTEM == "Windows" else "&&", ""
+        self.index: int = 1
+        self.cursor: int = self.text.index("insert")
+        self.longsymbol: str = "\\" if not SYSTEM == "Windows" else "&&"
+        self.longcmd: str = "" 
 
-        self.latest = self.cursor
+        self.latest: int = self.cursor
 
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
@@ -131,7 +133,7 @@ class Terminal(Frame):
         for bind_str in ("<Left>", "<BackSpace>"):
             self.text.bind(bind_str, self.left, add=True)
         for bind_str in ("<Return>", "<ButtonRelease-1>"):
-            self.text.bind(bind_str, self.updates, add=True)
+            self.text.bind(bind_str, self.check, add=True)
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
         # History recorder
@@ -144,12 +146,12 @@ class Terminal(Frame):
         self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
         self.historyindex = len(self.historys) - 1
 
-    def updates(self, _: Event) -> None:
+    def check(self, _: Event) -> None:
         """Update cursor"""
         self.cursor = self.text.index("insert")
         if float(self.cursor) < float(self.latest):
-            self.text.bind("<KeyPress>", self.eat, True)
-            self.text.bind("<KeyPress-BackSpace>", self.eat, True)
+            self.text.bind("<KeyPress>", self.ignore, True)
+            self.text.bind("<KeyPress-BackSpace>", self.ignore, True)
         elif float(self.cursor) >= float(self.latest):
             self.text.unbind("<Key>")
             self.text.unbind("<KeyPress-Backspace>")
@@ -163,8 +165,8 @@ class Terminal(Frame):
         self.text.insert("insert", "\n")
         self.index += 1
 
-    def eat(self, _: Event) -> str:
-        """Just eat"""
+    def ignore(self, _: Event) -> str:
+        """Ignore the event"""
         return "break"
 
     def up(self, _: Event) -> str:
@@ -205,10 +207,10 @@ class Terminal(Frame):
             self.current_process = None
         return "break"
 
-    def ignore(self) -> str:
+    def update(self) -> str:
         """Update or the command has no output"""
         self.directory()
-        self.updates(None)
+        self.check(None)
         self.latest = self.text.index("insert")
         self.text.see("end")
         return "break"
@@ -271,10 +273,9 @@ class Terminal(Frame):
         # The following needs to be put in an after so the kill command works
 
         # Check if the command was successful
-        (
-            returnlines,
-            errors,
-        ) = self.current_process.communicate()
+        output: tuple = self.current_process.communicate()
+        returnlines: str = output[0]
+        errors: str = output[1]
         returncode = self.current_process.returncode
         self.current_process = None
         if returncode != 0:
@@ -288,7 +289,7 @@ class Terminal(Frame):
                 self.index += 1
 
         # Update the text and the index
-        self.ignore()
+        self.update()
         return "break"  # Prevent the default newline character insertion
 
 
