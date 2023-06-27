@@ -28,15 +28,15 @@ if not (JSON_FILE).exists():
 
 # Styles creater
 def writestyle(**styles) -> None:
-	"""Write the style into the json file"""
-	# User can use this function to write with their own style
-	# TODO: improve it, new style will overwrite the old style
+    """Write the style into the json file"""
+    # User can use this function to write with their own style
+    # TODO: improve it, new style will overwrite the old style
     with open(JSON_FILE, "w", encoding="utf-8") as json_obj:
         json.dump(styles, json_obj)
 
 def load_style() -> dict:
-	"""Get style from the json file"""
-	# User also can use this function to get their own style
+    """Get style from the json file"""
+    # User also can use this function to get their own style
     with open(JSON_FILE, "r", encoding="utf-8") as json_obj:
         return json.load(json_obj)
 
@@ -63,6 +63,14 @@ Command: dict = {  # Style for normal "cmd.exe"
     "selectbackground": "#f3f3f3",
     "selectforeground": "#000000",
     "foreground": "#f2f2f2",
+}
+
+Git: dict = {
+    "background": "#000000",
+    "insertbackground": "#bfbfbf",
+    "selectbackground": "#bfbfbf",
+    "selectforeground": "#0E0E0E",
+    "foreground": "#efefef",
 }
 
 # User custom function
