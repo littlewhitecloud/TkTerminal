@@ -4,7 +4,7 @@ from __future__ import annotations
 from os import chdir, getcwd
 from pathlib import Path
 from platform import system
-from subprocess import CREATE_NEW_CONSOLE, PIPE, Popen
+from subprocess import PIPE, Popen
 from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
