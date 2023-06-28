@@ -9,7 +9,7 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
-from style import Default
+from style import DEFAULT
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
@@ -76,7 +76,7 @@ class Terminal(Frame):
     def __init__(
         self,
         master: Misc,
-        style: dict = Default,
+        style: dict = DEFAULT,
         filehistory: str = None,
         autohide: bool = False,
         *args,
@@ -92,7 +92,12 @@ class Terminal(Frame):
         self.style = style
 
         scrollbars = Scrollbar if not autohide else AutoHideScrollbar
-        self.xscroll = scrollbars(self, orient="horizontal")
+        horizontal: bool = False
+        if kwargs.get("wrap", "char") == "none":
+            self.xscroll = scrollbars(self, orient="horizontal")
+            self.xscroll.grid(row=1, column=0, sticky="ew")
+            horizontal = True
+
         self.yscroll = scrollbars(self)
         self.text = Text(
             self,
@@ -103,20 +108,18 @@ class Terminal(Frame):
             selectforeground=kwargs.get("selectforeground", self.style["selectforeground"]),
             relief=kwargs.get("relief", "flat"),
             foreground=kwargs.get("foreground", self.style["foreground"]),
-            xscrollcommand=self.xscroll.set,
             yscrollcommand=self.yscroll.set,
             wrap=kwargs.get("wrap", "char"),
             font=kwargs.get("font", ("Cascadia Code", 9, "normal")),
         )
-        self.xscroll.config(command=self.text.xview)
+        if horizontal:
+            self.text.config(xscrollcommand=self.xscroll.set)
+            self.xscroll.config(command=self.text.xview)
         self.yscroll.config(command=self.text.yview)
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-
-        if kwargs.get("wrap", "char") == "none":
-            self.xscroll.grid(row=1, column=0, sticky="ew")
-        self.yscroll.grid(row=0, column=1, sticky="ns")
+        self.yscroll.grid(row=0 if horizontal else 1, column=1 if horizontal else 0, sticky="ns")
 
         # Create command prompt
         self.directory()

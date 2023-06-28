@@ -1,5 +1,6 @@
 """Styles for terminal"""
 from __future__ import annotations
+
 from json import dump, load
 from pathlib import Path
 
@@ -28,6 +29,7 @@ def write_style(**styles) -> None:
     with open(JSON_FILE, "w", encoding="utf-8") as json_obj:
         dump(styles, json_obj, indent=1)
 
+
 # Load style
 def load_style() -> dict:
     """Get style from the json file"""
@@ -35,13 +37,13 @@ def load_style() -> dict:
     with open(JSON_FILE, "r", encoding="utf-8") as json_obj:
         return load(json_obj)
 
+
 # Config style
 def config_style() -> None:
     """Config the style with the ui"""
     # TODO: improve the code
     # TODO: improve the ui
     # TODO: fix some logic bug
-    # TODO: ...
     from tkinter import Text, Tk
     from tkinter.colorchooser import askcolor
     from tkinter.ttk import Button, Entry, Frame, Label
@@ -77,29 +79,56 @@ def config_style() -> None:
         )
         config.destroy()
 
+    # def fillentrys() -> None:
+
     config = Tk()
     config.geometry("855x500")
     config.title("Config your style")
     config.resizable(False, False)
-    
+
     theme: bool = False
     try:
         from sv_ttk import set_theme
-    except:
+    except ModuleNotFoundError:
         pass
     else:
         theme = True
         set_theme("dark")
         config.option_add("*font", ("Cascadia Mono", 9))
-        
 
     style: dict[str, str, str, str, str] = DEFAULT if load_style() == "{}" else load_style()
 
     create = Label(config, text="Create your custom style!")
-    
-    # TODO: Pack these into a for loop
+    """
+        for frame in (backgroundframe, insertbackgroundframe, selectbackgroundframe, selectforegroundframe, foregroundframe):
+        for _list in (
+            [background, "Choose or input your normalbackground hex color"], 
+            [insertbackground, "Choose or input your insertbackground hex color"],
+            [selectbackground, "Choose or input your selectbackground hex color"],
+            [selectforeground, "Choose or input your selectforeground hex color"],
+            [foreground, "Choose or input your selectforeground hex color"],
+        ):
+            _list[0] = Button(frame, text = _list[1])
+        
+        entrylist: list = []
+        
+        for widget in (backgroundentry, insertbackgroundentry, selectbackgroundentry, selectforegroundentry, foregroudnentry):
+            widget = Entry(frame)
+            entrylist.append(widget)
+        
+        cnt: int = 0
+        for _list in (
+            [backgroundbutton, "background"],
+            [insertbackgroundbutton, "insertbackground"],
+            [selectbackgroundbutton, "selectbackground"],
+            [selectforegroundbutton, "selectforeground"],
+            [foregroundbutton, "foreground"]
+        ):
+            _list[0] = Button(frame, text = "...", width = 3, command=lambda: selectcolor(entrylist[cnt], _list[1]))
+            cnt += 1
+    """
     backgroundframe = Frame(config)
-    background = Label(backgroundframe, text="Choose or input your background hex color")
+    background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
     backgroundentry = Entry(backgroundframe)
     backgroundbutton = Button(
         backgroundframe, text="...", width=3, command=lambda: selectcolor(backgroundentry, "background")
@@ -132,7 +161,7 @@ def config_style() -> None:
     foregroundbutton = Button(
         foregroundframe, text="...", width=3, command=lambda: selectcolor(foregroundentry, "foreground")
     )
-    
+
     buttonframe = Frame(config)
     save = Button(buttonframe, text="Save", command=savestyle)
     cancel = Button(buttonframe, text="Cancel", command=config.destroy)
@@ -157,22 +186,44 @@ def config_style() -> None:
     render["state"] = "disable"
 
     if theme:
-        for widget in (backgroundbutton, insertbackgroundbutton, selectbackgroundbutton, selectforegroundbutton, foregroundbutton, save):
-                widget.config(style="Accent.TButton")
+        for widget in (
+            backgroundbutton,
+            insertbackgroundbutton,
+            selectbackgroundbutton,
+            selectforegroundbutton,
+            foregroundbutton,
+            save,
+        ):
+            widget.config(style="Accent.TButton")
 
     save.pack(side="right")
     cancel.pack(side="right")
-    buttonframe.pack(side="bottom", fill = "x")
+    buttonframe.pack(side="bottom", fill="x")
 
-    render.pack(side="right", fill="y", padx = 3, pady = 3)
+    render.pack(side="right", fill="y", padx=3, pady=3)
     create.pack(side="top", fill="y", pady=15)
 
-    for widget in (background, insertbackground, selectbackground, selectforeground, foreground, backgroundentry, insertbackgroundentry, selectbackgroundentry, selectforegroundentry, foregroundentry, backgroundbutton, insertbackgroundbutton, selectbackgroundbutton, selectforegroundbutton, foregroundbutton):
-        widget.pack(side="left", padx = 3)
+    for widget in (
+        background,
+        insertbackground,
+        selectbackground,
+        selectforeground,
+        foreground,
+        backgroundentry,
+        insertbackgroundentry,
+        selectbackgroundentry,
+        selectforegroundentry,
+        foregroundentry,
+        backgroundbutton,
+        insertbackgroundbutton,
+        selectbackgroundbutton,
+        selectforegroundbutton,
+        foregroundbutton,
+    ):
+        widget.pack(side="left", padx=3)
 
     for widget in (backgroundframe, insertbackgroundframe, selectbackgroundframe, selectforegroundframe, foregroundframe):
-        widget.pack(side = "top", fill = "y")
-
+        widget.pack(side="top", fill="y")
 
     config.mainloop()
 
@@ -219,7 +270,6 @@ GIT: dict[str, str, str, str, str] = {  # Style for "git.exe"
     "foreground": "#efefef",
 }
 
-CUSTOM: dict[str, str, str, str, str] = load_style() # User custom style
+CUSTOM: dict[str, str, str, str, str] = load_style()  # User custom style
 
-if __name__ == "__main__":
-    config_style()
+config_style()
