@@ -9,7 +9,7 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
-from style import Default, Custom, Powershell
+from style import Default
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
@@ -76,7 +76,7 @@ class Terminal(Frame):
     def __init__(
         self,
         master: Misc,
-        style: dict = Custom,
+        style: dict = Default,
         filehistory: str = None,
         autohide: bool = False,
         *args,
@@ -89,18 +89,20 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
+        self.style = style
+
         scrollbars = Scrollbar if not autohide else AutoHideScrollbar
         self.xscroll = scrollbars(self, orient="horizontal")
         self.yscroll = scrollbars(self)
         self.text = Text(
             self,
             *args,
-            background=kwargs.get("background", style["background"]),
-            insertbackground=kwargs.get("insertbackground", style["insertbackground"]),
-            selectbackground=kwargs.get("selectbackground", style["selectbackground"]),
-            selectforeground=kwargs.get("selectforeground", style["selectforeground"]),
+            background=kwargs.get("background", self.style["background"]),
+            insertbackground=kwargs.get("insertbackground", self.style["insertbackground"]),
+            selectbackground=kwargs.get("selectbackground", self.style["selectbackground"]),
+            selectforeground=kwargs.get("selectforeground", self.style["selectforeground"]),
             relief=kwargs.get("relief", "flat"),
-            foreground=kwargs.get("foreground", style["foreground"]),
+            foreground=kwargs.get("foreground", self.style["foreground"]),
             xscrollcommand=self.xscroll.set,
             yscrollcommand=self.yscroll.set,
             wrap=kwargs.get("wrap", "char"),
