@@ -9,7 +9,7 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
-from style import Default, Custom
+from style import Default
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
@@ -76,7 +76,7 @@ class Terminal(Frame):
     def __init__(
         self,
         master: Misc,
-        style: dict = Custom,
+        style: dict = Default,
         filehistory: str = None,
         autohide: bool = False,
         *args,
