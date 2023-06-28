@@ -17,15 +17,6 @@ if not (JSON_FILE).exists():
     with open(JSON_FILE, "w", encoding="utf-8") as f:
         f.close()
 
-# Styles format:
-# {yourstylename}: dict = {
-#    "background": "{yourhexcolor}",
-#    "insertbackground": "{yourhexcolor}",
-#    "selectbackground": "{yourhexcolor}",
-#    "selectforeground": "{yourhexcolor}",
-#    "foreground": "{yourhexcolor}",
-# }
-
 
 # Styles creater
 def write_style(**styles) -> None:
@@ -93,7 +84,7 @@ def config_style() -> None:
         set_theme("light")
         config.option_add("*font", ("Cascadia Mono", 9))
 
-    style: dict = load_style()
+    style: dict[str, str, str, str, str] = load_style()
 
     create = Label(config, text="Create your custom style!")
 
@@ -187,8 +178,17 @@ def config_style() -> None:
     config.mainloop()
 
 
+# Styles format:
+# {yourstylename}: dict[str, str, str, str, str] = {
+#    "background": "{yourhexcolor}",
+#    "insertbackground": "{yourhexcolor}",
+#    "selectbackground": "{yourhexcolor}",
+#    "selectforeground": "{yourhexcolor}",
+#    "foreground": "{yourhexcolor}",
+# }
+
 # Built-in styles
-Default: dict = {  # Style for normal tkterminalwidget
+DEFAULT: dict[str, str, str, str, str] = {  # Style for normal tkterminalwidget
     "background": "#2B2B2B",
     "insertbackground": "#DCDCDC",
     "selectbackground": "#b4b3b3",
@@ -196,7 +196,7 @@ Default: dict = {  # Style for normal tkterminalwidget
     "foreground": "#cccccc",
 }
 
-Powershell: dict = {  # Style for powershell
+POWERSHELL: dict[str, str, str, str, str] = {  # Style for powershell
     "background": "#012456",
     "insertbackground": "#eeedf0",
     "selectbackground": "#fedba9",
@@ -204,7 +204,7 @@ Powershell: dict = {  # Style for powershell
     "foreground": "#cccccc",
 }
 
-Command: dict = {  # Style for normal "cmd.exe"
+COMMAND: dict[str, str, str, str, str] = {  # Style for normal "cmd.exe"
     "background": "#000000",
     "insertbackground": "#f2f2f2",
     "selectbackground": "#f3f3f3",
@@ -212,7 +212,7 @@ Command: dict = {  # Style for normal "cmd.exe"
     "foreground": "#f2f2f2",
 }
 
-Git: dict = {
+GIT: dict[str, str, str, str, str] = {
     "background": "#000000",
     "insertbackground": "#bfbfbf",
     "selectbackground": "#bfbfbf",
@@ -221,10 +221,4 @@ Git: dict = {
 }
 
 # User custom style
-Custom: dict = load_style()
-
-# write_style(background = "#2B2B2B", insertbackground = "#DCDCDC",
-# selectbackground = "#b4b3b3", selectforeground = "#e6e6e6", foreground = "#cccccc")
-
-# config_style()
-# print(Custom)
+CUSTOM: dict[str, str, str, str, str] = load_style()
