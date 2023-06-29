@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from json import dump, load
 from pathlib import Path
-from tkinter import Frame, Text, Tk
+from re import match
+from tkinter import Event, Frame, Text, Tk
 from tkinter.colorchooser import askcolor
 from tkinter.ttk import Button, Entry, Label
 
@@ -150,7 +151,7 @@ class Config(Tk):
         foreground = Label(foregroundframe, text="Choose or input your selectforeground hex color")
         foregroundentry = Entry(foregroundframe)
         foregroundbutton = Button(foregroundframe, command=lambda: self.selectcolor(foregroundentry, "foreground"))
-        
+
         # Style render configs
         self.render = Text(
             self,
@@ -170,7 +171,7 @@ class Config(Tk):
             "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
         )
         self.render["state"] = "disable"
-        
+
         # add the theme to the button widgets if usetheme == True
         if usetheme:
             for widget in (
@@ -217,6 +218,15 @@ class Config(Tk):
         ):
             widget.pack(side="left", padx=3)
 
+        for entry in (
+            backgroundentry,
+            insertbackgroundentry,
+            selectbackgroundentry,
+            selectforegroundentry,
+            foregroundentry,
+        ):
+            entry.bind("<KeyPress>", self.checkhexcolor)
+
         for widget in (
             backgroundframe,
             insertbackgroundframe,
@@ -259,6 +269,13 @@ class Config(Tk):
             foreground=self.style["foreground"],
         )
         self.destroy()
+
+    def checkhexcolor(self, event: Event) -> None:
+        """Check the hex color"""
+        if event.widget.get().strip() == "" or match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", event.widget.get()):
+            event.widget.state(["!invalid"])
+        else:
+            event.widget.state(["invalid"])
 
 
 if __name__ == "__main__":
