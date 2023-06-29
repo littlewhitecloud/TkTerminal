@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from json import dump, load
 from pathlib import Path
-from tkinter import Text, Tk
+from tkinter import Frame, Text, Tk
 from tkinter.colorchooser import askcolor
-from tkinter.ttk import Button, Entry, Frame, Label
+from tkinter.ttk import Button, Entry, Label
 
 from platformdirs import user_cache_dir
 
@@ -85,7 +85,7 @@ def load_style() -> dict:
 class Config(Tk):
     """ "A config gui for user to edit their custom styles"""
 
-    def __init__(self, usetheme: bool = False):
+    def __init__(self, usetheme: bool = False, basedon: dict[str] = DEFAULT):
         super().__init__()
         if usetheme:
             from darkdetect import isDark
@@ -98,24 +98,20 @@ class Config(Tk):
         self.title("Config your custom style")
         self.resizable(False, False)
 
-        self.style: dict[str] = DEFAULT if load_style() == "{}" else load_style()
+        self.style: dict[str] = basedon if load_style() == {} else load_style()
 
         # Widgets
         create = Label(self, text="Create your custom style")
         backgroundframe = Frame(self)
         background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
         backgroundentry = Entry(backgroundframe)
-        backgroundbutton = Button(
-            backgroundframe, text="...", width=3, command=lambda: self.selectcolor(backgroundentry, "background")
-        )
+        backgroundbutton = Button(backgroundframe, command=lambda: self.selectcolor(backgroundentry, "background"))
 
         insertbackgroundframe = Frame(self)
         insertbackground = Label(insertbackgroundframe, text="Choose or input your insertbackground hex color")
         insertbackgroundentry = Entry(insertbackgroundframe)
         insertbackgroundbutton = Button(
             insertbackgroundframe,
-            text="...",
-            width=3,
             command=lambda: self.selectcolor(insertbackgroundentry, "insertbackground"),
         )
 
@@ -124,8 +120,6 @@ class Config(Tk):
         selectbackgroundentry = Entry(selectbackgroundframe)
         selectbackgroundbutton = Button(
             selectbackgroundframe,
-            text="...",
-            width=3,
             command=lambda: self.selectcolor(selectbackgroundentry, "selectbackground"),
         )
 
@@ -134,19 +128,16 @@ class Config(Tk):
         selectforegroundentry = Entry(selectforegroundframe)
         selectforegroundbutton = Button(
             selectforegroundframe,
-            text="...",
-            width=3,
             command=lambda: self.selectcolor(selectforegroundentry, "selectforeground"),
         )
 
         foregroundframe = Frame(self)
         foreground = Label(foregroundframe, text="Choose or input your selectforeground hex color")
         foregroundentry = Entry(foregroundframe)
-        foregroundbutton = Button(
-            foregroundframe, text="...", width=3, command=lambda: self.selectcolor(foregroundentry, "foreground")
-        )
+        foregroundbutton = Button(foregroundframe, command=lambda: self.selectcolor(foregroundentry, "foreground"))
 
         buttonframe = Frame(self)
+        buttonframe.config(background="#2a2a2a")
         save = Button(buttonframe, text="Save", width=5, command=self.savestyle)
         cancel = Button(buttonframe, text="Cancel", width=5, command=self.destroy)
 
@@ -176,15 +167,20 @@ class Config(Tk):
                 selectbackgroundbutton,
                 selectforegroundbutton,
                 foregroundbutton,
-                save,
             ):
-                widget.config(style="Accent.TButton")
+                widget.config(style="Accent.TButton", width=2, text="🎨")
 
-        save.pack(side="right")
-        cancel.pack(side="right")
+        for widget, hexcolor in zip(
+            (backgroundentry, insertbackgroundentry, selectbackgroundentry, selectforegroundentry, foregroundentry),
+            self.style.values(),
+        ):
+            widget.insert("insert", hexcolor)  # fill the entry with hexcolor
+
+        save.pack(side="right", padx=1)
+        cancel.pack(side="right", padx=3)
         buttonframe.pack(side="bottom", fill="x")
 
-        self.render.pack(side="right", fill="y", padx=3, pady=3)
+        self.render.pack(side="right", fill="y")
         create.pack(side="top", fill="y", pady=15)
 
         for widget in (
@@ -213,7 +209,7 @@ class Config(Tk):
             selectforegroundframe,
             foregroundframe,
         ):
-            widget.pack(side="top", fill="y")
+            widget.pack(side="top", fill="y", pady=3)
 
     def selectcolor(self, entry: Entry, name: str) -> None:
         """Select the color in the gui and insert it into the
@@ -251,5 +247,5 @@ class Config(Tk):
 
 
 if __name__ == "__main__":
-    configstyle = Config(True)
+    configstyle = Config(True, basedon=POWERSHELL)
     configstyle.mainloop()

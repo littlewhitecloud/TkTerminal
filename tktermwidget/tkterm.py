@@ -93,7 +93,7 @@ class Terminal(Frame):
 
         scrollbars = Scrollbar if not autohide else AutoHideScrollbar
         horizontal: bool = False
-        if kwargs.get("wrap", "char") != "none":
+        if kwargs.get("wrap", "char") == "none":
             self.xscroll = scrollbars(self, orient="horizontal")
             self.xscroll.grid(row=1, column=0, sticky="ew")
             horizontal = True
@@ -120,7 +120,8 @@ class Terminal(Frame):
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
 
-        self.yscroll.grid(row=1 if horizontal else 0, column=1 if horizontal else 1, sticky="ns")
+        self.yscroll.grid(row=0, column=1, sticky="ns")
+        # self.yscroll.grid(row=1 if horizontal else 0, column=0 if horizontal else 1, sticky="ns")
 
         # Create command prompt
         self.directory()
