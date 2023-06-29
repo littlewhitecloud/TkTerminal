@@ -10,6 +10,39 @@ from platformdirs import user_cache_dir
 STYLE_PATH = Path(user_cache_dir("tktermwidget"))
 JSON_FILE = STYLE_PATH / "styles.json"
 
+# Built-in styles
+DEFAULT: dict[str] = {  # Style for normal tkterminalwidget
+    "background": "#2B2B2B",
+    "insertbackground": "#DCDCDC",
+    "selectbackground": "#b4b3b3",
+    "selectforeground": "#e6e6e6",
+    "foreground": "#cccccc",
+}
+
+POWERSHELL: dict[str] = {  # Style for powershell
+    "background": "#012456",
+    "insertbackground": "#eeedf0",
+    "selectbackground": "#fedba9",
+    "selectforeground": "#11120f",
+    "foreground": "#cccccc",
+}
+
+COMMAND: dict[str] = {  # Style for normal "cmd.exe"
+    "background": "#000000",
+    "insertbackground": "#f2f2f2",
+    "selectbackground": "#f3f3f3",
+    "selectforeground": "#000000",
+    "foreground": "#f2f2f2",
+}
+
+GIT: dict[str] = {  # Style for "git.exe"
+    "background": "#000000",
+    "insertbackground": "#bfbfbf",
+    "selectbackground": "#bfbfbf",
+    "selectforeground": "#0E0E0E",
+    "foreground": "#efefef",
+}
+
 # Check the style file
 if not STYLE_PATH.exists():
     STYLE_PATH.mkdir(parents=True)
@@ -96,7 +129,7 @@ def config_style() -> None:
         set_theme("dark")
         config.option_add("*font", ("Cascadia Mono", 9))
 
-    style: dict[str, str, str, str, str] = DEFAULT if load_style() == "{}" else load_style()
+    style: dict[str] = DEFAULT if load_style() == "{}" else load_style()
 
     create = Label(config, text="Create your custom style!")
     """
@@ -179,7 +212,6 @@ def config_style() -> None:
         relief="flat",
     )
 
-    # TODO: Improve here
     render.insert("insert", "This is a normal text for test style.")
     render.tag_add("select", "1.31", "1.36")
     render.tag_config("select", background=style["selectbackground"], foreground=style["selectforeground"])
@@ -229,7 +261,7 @@ def config_style() -> None:
 
 
 # Styles format:
-# {yourstylename}: dict[str, str, str, str, str] = {
+# {yourstylename}: dict[str] = {
 #    "background": "{yourhexcolor}",
 #    "insertbackground": "{yourhexcolor}",
 #    "selectbackground": "{yourhexcolor}",
@@ -237,39 +269,6 @@ def config_style() -> None:
 #    "foreground": "{yourhexcolor}",
 # }
 
-# Built-in styles
-DEFAULT: dict[str, str, str, str, str] = {  # Style for normal tkterminalwidget
-    "background": "#2B2B2B",
-    "insertbackground": "#DCDCDC",
-    "selectbackground": "#b4b3b3",
-    "selectforeground": "#e6e6e6",
-    "foreground": "#cccccc",
-}
-
-POWERSHELL: dict[str, str, str, str, str] = {  # Style for powershell
-    "background": "#012456",
-    "insertbackground": "#eeedf0",
-    "selectbackground": "#fedba9",
-    "selectforeground": "#11120f",
-    "foreground": "#cccccc",
-}
-
-COMMAND: dict[str, str, str, str, str] = {  # Style for normal "cmd.exe"
-    "background": "#000000",
-    "insertbackground": "#f2f2f2",
-    "selectbackground": "#f3f3f3",
-    "selectforeground": "#000000",
-    "foreground": "#f2f2f2",
-}
-
-GIT: dict[str, str, str, str, str] = {  # Style for "git.exe"
-    "background": "#000000",
-    "insertbackground": "#bfbfbf",
-    "selectbackground": "#bfbfbf",
-    "selectforeground": "#0E0E0E",
-    "foreground": "#efefef",
-}
-
-CUSTOM: dict[str, str, str, str, str] = load_style()  # User custom style
+CUSTOM: dict[str] = load_style()  # User custom style
 
 config_style()
