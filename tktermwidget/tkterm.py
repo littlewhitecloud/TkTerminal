@@ -119,7 +119,7 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-        
+
         self.yscroll.grid(row=1 if horizontal else 0, column=1 if horizontal else 1, sticky="ns")
 
         # Create command prompt
