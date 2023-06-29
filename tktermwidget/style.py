@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from json import dump, load
 from pathlib import Path
-from tkinter import Tk, Text
-from tkinter.ttk import Button, Entry, Frame, Label
+from tkinter import Text, Tk
 from tkinter.colorchooser import askcolor
+from tkinter.ttk import Button, Entry, Frame, Label
 
 from platformdirs import user_cache_dir
 
@@ -64,13 +64,15 @@ if not (JSON_FILE).exists():
     with open(JSON_FILE, "w", encoding="utf-8") as f:
         dump("{}", f)
 
+
 # Functions
 def write_style(**styles) -> None:
     """Write the style into the json file"""
     # User can call this function to write the style without gui
     # TODO: improve it, new style will overwrite the old
     with open(JSON_FILE, "w", encoding="utf-8") as f:
-        dump(styles, j, indent=1)
+        dump(styles, f, indent=1)
+
 
 def load_style() -> dict:
     """Load the style from the json file"""
@@ -78,24 +80,26 @@ def load_style() -> dict:
     with open(JSON_FILE, "r", encoding="utf-8") as f:
         return load(f)
 
+
 # Class
 class Config(Tk):
-    """"A config gui for user to edit their custom styles"""
+    """ "A config gui for user to edit their custom styles"""
 
     def __init__(self, usetheme: bool = False):
         super().__init__()
         if usetheme:
             from darkdetect import isDark
             from sv_ttk import set_theme
+
             set_theme("dark" if isDark() else "light")
             self.option_add("*font", ("Cascadia Mono", 9, "normal"))
 
         self.geometry("855x525")
         self.title("Config your custom style")
         self.resizable(False, False)
-            
+
         self.style: dict[str] = DEFAULT if load_style() == "{}" else load_style()
-            
+
         # Widgets
         create = Label(self, text="Create your custom style")
         backgroundframe = Frame(self)
@@ -109,21 +113,30 @@ class Config(Tk):
         insertbackground = Label(insertbackgroundframe, text="Choose or input your insertbackground hex color")
         insertbackgroundentry = Entry(insertbackgroundframe)
         insertbackgroundbutton = Button(
-            insertbackgroundframe, text="...", width=3, command=lambda: self.selectcolor(insertbackgroundentry, "insertbackground")
+            insertbackgroundframe,
+            text="...",
+            width=3,
+            command=lambda: self.selectcolor(insertbackgroundentry, "insertbackground"),
         )
 
         selectbackgroundframe = Frame(self)
         selectbackground = Label(selectbackgroundframe, text="Choose or input your selectbackground hex color")
         selectbackgroundentry = Entry(selectbackgroundframe)
         selectbackgroundbutton = Button(
-            selectbackgroundframe, text="...", width=3, command=lambda: self.selectcolor(selectbackgroundentry, "selectbackground")
+            selectbackgroundframe,
+            text="...",
+            width=3,
+            command=lambda: self.selectcolor(selectbackgroundentry, "selectbackground"),
         )
 
         selectforegroundframe = Frame(self)
         selectforeground = Label(selectforegroundframe, text="Choose or input your selectforeground hex color")
         selectforegroundentry = Entry(selectforegroundframe)
         selectforegroundbutton = Button(
-            selectforegroundframe, text="...", width=3, command=lambda: self.selectcolor(selectforegroundentry, "selectforeground")
+            selectforegroundframe,
+            text="...",
+            width=3,
+            command=lambda: self.selectcolor(selectforegroundentry, "selectforeground"),
         )
 
         foregroundframe = Frame(self)
@@ -151,9 +164,11 @@ class Config(Tk):
 
         self.render.insert("insert", "This is a normal text for test style.")
         self.render.tag_add("select", "1.31", "1.36")
-        self.render.tag_config("select", background=self.style["selectbackground"], foreground=self.style["selectforeground"])
+        self.render.tag_config(
+            "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
+        )
         self.render["state"] = "disable"
-        
+
         if usetheme:
             for widget in (
                 backgroundbutton,
@@ -164,7 +179,7 @@ class Config(Tk):
                 save,
             ):
                 widget.config(style="Accent.TButton")
-    
+
         save.pack(side="right")
         cancel.pack(side="right")
         buttonframe.pack(side="bottom", fill="x")
@@ -191,19 +206,24 @@ class Config(Tk):
         ):
             widget.pack(side="left", padx=3)
 
-        for widget in (backgroundframe, insertbackgroundframe, selectbackgroundframe, selectforegroundframe, foregroundframe):
+        for widget in (
+            backgroundframe,
+            insertbackgroundframe,
+            selectbackgroundframe,
+            selectforegroundframe,
+            foregroundframe,
+        ):
             widget.pack(side="top", fill="y")
-    
-    
+
     def selectcolor(self, entry: Entry, name: str) -> None:
-        """Select the color in the gui and insert it into the 
+        """Select the color in the gui and insert it into the
         entry, also update the render with the lastest style"""
-        color = askcolor()[-1] # get the hex color
+        color = askcolor()[-1]  # get the hex color
         entry.delete(0, "end")
         entry.insert("insert", color)
-        self.style[name] = color # store the hex color and the color name
-        self.updaterender() # update the render to show the latest style
-    
+        self.style[name] = color  # store the hex color and the color name
+        self.updaterender()  # update the render to show the latest style
+
     def updaterender(self) -> None:
         """Let the render show with the latest style"""
         self.render.config(
@@ -211,15 +231,13 @@ class Config(Tk):
             insertbackground=self.style["insertbackground"],
             selectbackground=self.style["selectbackground"],
             selectforeground=self.style["selectforeground"],
-            foreground=self.style["foreground"],        
+            foreground=self.style["foreground"],
         )
         self.render.tag_config(
-            "select", 
-            background=self.style["selectbackground"], 
-            foreground=self.style["selectforeground"]
+            "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
         )
         self.update()
-        
+
     def savestyle(self) -> None:
         """Save the style"""
         write_style(
@@ -230,6 +248,7 @@ class Config(Tk):
             foreground=self.style["foreground"],
         )
         self.destroy()
+
 
 if __name__ == "__main__":
     configstyle = Config(True)
