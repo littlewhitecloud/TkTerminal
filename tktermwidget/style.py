@@ -87,20 +87,29 @@ class Config(Tk):
 
     def __init__(self, usetheme: bool = False, basedon: dict[str] = DEFAULT):
         super().__init__()
+        self.geometry("855x525")
+        self.title("Config your custom style")
+        self.resizable(False, False)
+        self.iconbitmap("")  # Must call this function or we can't get the hwnd
         if usetheme:
             from darkdetect import isDark
             from sv_ttk import set_theme
 
             set_theme("dark" if isDark() else "light")
             self.option_add("*font", ("Cascadia Mono", 9, "normal"))
+            if isDark():
+                from ctypes import byref, c_int, sizeof, windll
 
-        self.geometry("855x525")
-        self.title("Config your custom style")
-        self.resizable(False, False)
+                windll.dwmapi.DwmSetWindowAttribute(
+                    windll.user32.GetParent(self.winfo_id()), 20, byref(c_int(2)), sizeof(c_int(2))
+                )
+                self.withdraw()
+                self.deiconify()
 
         self.style: dict[str] = basedon if load_style() == {} else load_style()
 
         # Widgets
+        # TODO: check the hex color is it vaild
         create = Label(self, text="Create your custom style")
         backgroundframe = Frame(self)
         background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
