@@ -91,12 +91,14 @@ class Config(Tk):
         self.title("Config your custom style")
         self.resizable(False, False)
         self.iconbitmap("")  # Must call this function or we can't get the hwnd
+
         if usetheme:
             from darkdetect import isDark
             from sv_ttk import set_theme
 
             set_theme("dark" if isDark() else "light")
-            self.option_add("*font", ("Cascadia Mono", 9, "normal"))
+            self.option_add("*font", ("Cascadia Mono", 9))
+
             if isDark():
                 from ctypes import byref, c_int, sizeof, windll
 
@@ -108,9 +110,13 @@ class Config(Tk):
 
         self.style: dict[str] = basedon if load_style() == {} else load_style()
 
-        # Widgets
+        # Color choose or input widgets
         # TODO: check the hex color is it vaild
-        create = Label(self, text="Create your custom style")
+        buttonframe = Frame(self)
+        save = Button(buttonframe, text="Save", width=6, command=self.savestyle)
+        cancel = Button(buttonframe, text="Cancel", width=6, command=self.destroy)
+
+        create = Label(self, text="✨ Create your custom style ✨")
         backgroundframe = Frame(self)
         background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
         backgroundentry = Entry(backgroundframe)
@@ -144,12 +150,8 @@ class Config(Tk):
         foreground = Label(foregroundframe, text="Choose or input your selectforeground hex color")
         foregroundentry = Entry(foregroundframe)
         foregroundbutton = Button(foregroundframe, command=lambda: self.selectcolor(foregroundentry, "foreground"))
-
-        buttonframe = Frame(self)
-        buttonframe.config(background="#2a2a2a")
-        save = Button(buttonframe, text="Save", width=5, command=self.savestyle)
-        cancel = Button(buttonframe, text="Cancel", width=5, command=self.destroy)
-
+        
+        # Style render configs
         self.render = Text(
             self,
             width=40,
@@ -168,7 +170,8 @@ class Config(Tk):
             "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
         )
         self.render["state"] = "disable"
-
+        
+        # add the theme to the button widgets if usetheme == True
         if usetheme:
             for widget in (
                 backgroundbutton,
@@ -178,15 +181,18 @@ class Config(Tk):
                 foregroundbutton,
             ):
                 widget.config(style="Accent.TButton", width=2, text="🎨")
+            save.config(style="Accent.TButton")
 
+        # fill the entry with hexcolor before pack
         for widget, hexcolor in zip(
             (backgroundentry, insertbackgroundentry, selectbackgroundentry, selectforegroundentry, foregroundentry),
             self.style.values(),
         ):
-            widget.insert("insert", hexcolor)  # fill the entry with hexcolor
+            widget.insert("insert", hexcolor)
 
-        save.pack(side="right", padx=1)
-        cancel.pack(side="right", padx=3)
+        # Pack the widgets
+        cancel.pack(side="right", padx=1)
+        save.pack(side="right", padx=3)
         buttonframe.pack(side="bottom", fill="x")
 
         self.render.pack(side="right", fill="y")
