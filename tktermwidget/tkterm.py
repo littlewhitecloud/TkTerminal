@@ -9,7 +9,7 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
-from style import Default
+from style import DEFAULT
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
@@ -76,7 +76,7 @@ class Terminal(Frame):
     def __init__(
         self,
         master: Misc,
-        style: dict = Default,
+        style: dict = DEFAULT,
         filehistory: str = None,
         autohide: bool = False,
         *args,
@@ -89,32 +89,39 @@ class Terminal(Frame):
         self.columnconfigure(0, weight=1)
 
         # Create text widget and scrollbars
+        self.style = style
+
         scrollbars = Scrollbar if not autohide else AutoHideScrollbar
-        self.xscroll = scrollbars(self, orient="horizontal")
+        horizontal: bool = False
+        if kwargs.get("wrap", "char") == "none":
+            self.xscroll = scrollbars(self, orient="horizontal")
+            self.xscroll.grid(row=1, column=0, sticky="ew")
+            horizontal = True
+
         self.yscroll = scrollbars(self)
         self.text = Text(
             self,
             *args,
-            background=kwargs.get("background", style["background"]),
-            insertbackground=kwargs.get("insertbackground", style["insertbackground"]),
-            selectbackground=kwargs.get("selectbackground", style["selectbackground"]),
-            selectforeground=kwargs.get("selectforeground", style["selectforeground"]),
+            background=kwargs.get("background", self.style["background"]),
+            insertbackground=kwargs.get("insertbackground", self.style["insertbackground"]),
+            selectbackground=kwargs.get("selectbackground", self.style["selectbackground"]),
+            selectforeground=kwargs.get("selectforeground", self.style["selectforeground"]),
             relief=kwargs.get("relief", "flat"),
-            foreground=kwargs.get("foreground", style["foreground"]),
-            xscrollcommand=self.xscroll.set,
+            foreground=kwargs.get("foreground", self.style["foreground"]),
             yscrollcommand=self.yscroll.set,
             wrap=kwargs.get("wrap", "char"),
             font=kwargs.get("font", ("Cascadia Code", 9, "normal")),
         )
-        self.xscroll.config(command=self.text.xview)
+        if horizontal:
+            self.text.config(xscrollcommand=self.xscroll.set)
+            self.xscroll.config(command=self.text.xview)
         self.yscroll.config(command=self.text.yview)
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
 
-        if kwargs.get("wrap", "char") == "none":
-            self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
+        # self.yscroll.grid(row=1 if horizontal else 0, column=0 if horizontal else 1, sticky="ns")
 
         # Create command prompt
         self.directory()
