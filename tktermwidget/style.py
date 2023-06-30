@@ -218,14 +218,11 @@ class Config(Tk):
         ):
             widget.pack(side="left", padx=3)
 
-        for entry in (
-            backgroundentry,
-            insertbackgroundentry,
-            selectbackgroundentry,
-            selectforegroundentry,
-            foregroundentry,
-        ):
-            entry.bind("<KeyPress>", self.checkhexcolor)
+        backgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "background"))
+        insertbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "insertbackground"))
+        selectbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectbackground"))
+        selectforegroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectforeground"))
+        foregroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "foreground"))
 
         for widget in (
             backgroundframe,
@@ -270,12 +267,15 @@ class Config(Tk):
         )
         self.destroy()
 
-    def checkhexcolor(self, event: Event) -> None:
+    def checkhexcolor(self, event: Event, name: str) -> None:
         """Check the hex color"""
-        if event.widget.get().strip() == "" or match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", event.widget.get()):
-            event.widget.state(["!invalid"])
-        else:
+        if match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", event.widget.get()):
             event.widget.state(["invalid"])
+            self.style[name] = event.widget.get()
+            self.updaterender()
+        else:
+            event.widget.state(["!invalid"])
+
 
 
 if __name__ == "__main__":
