@@ -277,6 +277,8 @@ class Config(Tk):
             event.widget.state(["!invalid"])
 
 
+CUSTOM: dict[str] = load_style()
+
 if __name__ == "__main__":
     configstyle = Config(True, basedon=POWERSHELL)
     configstyle.mainloop()
