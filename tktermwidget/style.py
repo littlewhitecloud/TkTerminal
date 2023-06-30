@@ -109,7 +109,7 @@ class Config(Tk):
                 self.withdraw()
                 self.deiconify()
 
-        self.style: dict[str] = basedon if load_style() == {} else load_style()
+        self.style: dict[str] = basedon if basedon != DEFAULT else load_style() if load_style() != {} else DEFAULT
 
         # Color choose or input widgets
         # TODO: check the hex color is it vaild

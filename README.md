@@ -25,10 +25,33 @@
 ## Styles
 ```tkterminalwidget``` also have some styles to use such as ```Powershell``` ```Command```:
 ![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/3affd018-0408-4e91-96de-4775937e0ab8)
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/2b43b9d0-7569-498b-932d-e18828541d47)
+But also, you can create your custom style by using
+```python
+from tktermwidget import Config, POWERSHELL
 
+styleconfig = Config(usetheme=True, basedon=POWERSHELL)
+# if usetheme enable, the window will use sv_ttk theme
+# basedon mean you can create your style based on the "basedon" style
+styleconfig.mainloop()
+```
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/09a53045-8806-4e63-9045-741bcce65e99)
+
+After saving it, you can write down this to use the custom theme:
+```python
+from tkinterwidget import Terminal, CUSTOM
+example = Terminal(window, style=CUSTOM) # your custom theme
+example.mainloop()
+```
+Or use a built in theme:
+```python
+from tkinterwidget import Terminal, POWERSHELL # use powershell for an example
+example = Terminal(window, style=POWERSHELL)
+example.mainloop()
+```
 
 ## Installation:
-```batch
+```console
 pip install tktermwidget
 ```
 
@@ -74,4 +97,3 @@ root.deiconify()
 # Start mainloop
 root.mainloop()
 ```
-

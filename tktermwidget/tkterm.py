@@ -9,7 +9,12 @@ from tkinter import Event, Misc, Text
 from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
-from style import DEFAULT
+
+dev: bool = False
+if dev:
+    from style import DEFAULT
+else:
+    from .style import DEFAULT # noqa: F401
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))

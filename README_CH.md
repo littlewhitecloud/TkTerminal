@@ -23,10 +23,35 @@
 
 ## 风格
 ```tkterminalwidget``` 也有一些主题可以用 比如 ```Powershell``` ```Command```
-![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/b1f7cfec-c5e7-48a0-be40-0c0f63fb959b)
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/3affd018-0408-4e91-96de-4775937e0ab8)
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/2b43b9d0-7569-498b-932d-e18828541d47)
+但是，用这个你也可以创建自己的主题：
+```python
+from tktermwidget import Config, POWERSHELL
+
+styleconfig = Config(usetheme=True, basedon=POWERSHELL)
+# 如果usetheme启用的话，窗口会使用sv_ttk主题
+# basedon意义是在基于“basedon”得到的主题上创建你自己的主题
+styleconfig.mainloop()
+```
+![image](https://github.com/littlewhitecloud/TkTerminal/assets/71159641/09a53045-8806-4e63-9045-741bcce65e99)
+
+在保存完它之后，你可以写下下面的代码来创建你自己的主题:
+
+```python
+from tkinterwidget import Terminal, CUSTOM
+example = Terminal(window, style=CUSTOM) #你自己的主题
+example.mainloop()
+```
+或者使用一个构建好的主题
+```python
+from tkinterwidget import Terminal, POWERSHELL # 用Powershell举例
+example = Terminal(window, style=POWERSHELL)
+example.mainloop()
+```
 
 ## 安装:
-```batch
+```console
 pip install tktermwidget
 ```
 
