@@ -1,9 +1,5 @@
 """__init__ of the tktermwidget package"""
-
-# Load the functions
 from json import dump, load
-
-# Check files in need
 from pathlib import Path
 
 from platformdirs import user_cache_dir
