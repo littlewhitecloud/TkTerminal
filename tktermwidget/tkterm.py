@@ -10,10 +10,10 @@ from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
 
-if __name__ == "__main__":
+if __name__ == "__main__": # Because it will fail when debugging on this file
     from style import DEFAULT
-else:
-    from .style import DEFAULT
+else: # Call from another file
+    from .style import DEFAULT  # noqa: F401
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
