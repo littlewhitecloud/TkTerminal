@@ -154,12 +154,14 @@ class Terminal(Frame):
     def check(self, _: Event) -> None:
         """Update cursor"""
         self.cursor = self.text.index("insert")
+        print("cur:", self.cursor)
+        print("late:", self.latest)
         if float(self.cursor) < float(self.latest):
             self.text.bind("<KeyPress>", self.ignore, True)
             self.text.bind("<KeyPress-BackSpace>", self.ignore, True)
         elif float(self.cursor) >= float(self.latest):
-            self.text.unbind("<Key>")
-            self.text.unbind("<KeyPress-Backspace>")
+            self.text.unbind("<KeyPress>")
+            self.text.unbind("<KeyPress-BackSpace>")
 
     def directory(self) -> None:
         """Insert the directory"""
@@ -168,7 +170,6 @@ class Terminal(Frame):
     def newline(self) -> None:
         """Insert a newline"""
         self.text.insert("insert", "\n")
-        self.index += 1
 
     def ignore(self, _: Event) -> str:
         """Ignore the event"""
@@ -226,6 +227,7 @@ class Terminal(Frame):
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         cmd = cmd.split(SIGN)[-1].strip()
 
+        self.index += 1
         if self.longflag:
             self.longcmd += cmd
             cmd = self.longcmd
@@ -290,10 +292,9 @@ class Terminal(Frame):
         self.newline()
         for line in returnlines:
             self.text.insert("insert", line)
-            if line == "\n":
-                self.index += 1
 
         # Update the text and the index
+        self.index = int(self.text.index("insert").split('.')[0])
         self.update()
         return "break"  # Prevent the default newline character insertion
 
