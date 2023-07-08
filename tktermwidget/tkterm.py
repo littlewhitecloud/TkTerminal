@@ -10,34 +10,21 @@ from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
 
-if __name__ == "__main__": # Because it will fail when debugging on this file
+if __name__ == "__main__":  # Because it will fail when debugging on this file
     from style import DEFAULT
-else: # Call from another file
+else:  # Call from another file
     from .style import DEFAULT  # noqa: F401
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 HISTORY_FILE = HISTORY_PATH / "history.txt"
 SYSTEM = system()
+CREATE_NEW_CONSOLE = 0
+SIGN = "$ "
 if SYSTEM == "Windows":
     from subprocess import CREATE_NEW_CONSOLE
 
     SIGN = ">"
-else:
-    CREATE_NEW_CONSOLE = 0
-    SIGN = "$ "
-
-# Check that the history directory exists
-if not HISTORY_PATH.exists():
-    HISTORY_PATH.mkdir(parents=True)
-    # Also create the history file
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        f.close()
-
-# Check that the history file exists
-if not (HISTORY_FILE).exists():
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        f.close()
 
 
 class AutoHideScrollbar(Scrollbar):
@@ -125,7 +112,10 @@ class Terminal(Frame):
         self.text.grid(row=0, column=0, sticky="nsew")
 
         self.yscroll.grid(row=0, column=1, sticky="ns")
+
         # self.yscroll.grid(row=1 if horizontal else 0, column=0 if horizontal else 1, sticky="ns")
+        #                                    ^
+        # TODO: this line should check again |
 
         # Create command prompt
         self.directory()
@@ -208,7 +198,7 @@ class Terminal(Frame):
             self.directory()
         return "break"
 
-    def left(self, _: Event) -> str:
+    def left(self, _: Event) -> str | None:
         """Go left in the command if the command is greater than the path"""
         insert_index = self.text.index("insert")
         dir_index = f"{insert_index.split('.')[0]}.{len(getcwd() + SIGN)}"

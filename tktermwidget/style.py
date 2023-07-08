@@ -56,15 +56,6 @@ GIT: dict[str] = {  # Style for "git.exe"
     "foreground": "#efefef",
 }
 
-# Check the style file
-if not STYLE_PATH.exists():
-    STYLE_PATH.mkdir(parents=True)
-    with open(JSON_FILE, "w", encoding="utf-8") as f:
-        dump("{}", f)
-if not (JSON_FILE).exists():
-    with open(JSON_FILE, "w", encoding="utf-8") as f:
-        dump("{}", f)
-
 
 # Functions
 def write_style(**styles) -> None:
@@ -280,5 +271,6 @@ class Config(Tk):
 CUSTOM: dict[str] = load_style()
 
 if __name__ == "__main__":
+    # An example or a test
     configstyle = Config(True, basedon=POWERSHELL)
     configstyle.mainloop()
