@@ -294,7 +294,7 @@ class Terminal(Frame):
             self.text.insert("insert", line)
 
         # Update the text and the index
-        self.index = int(self.text.index("insert").split('.')[0])
+        self.index = int(self.text.index("insert").split(".")[0])
         self.update()
         return "break"  # Prevent the default newline character insertion
 
