@@ -13,7 +13,7 @@ from platformdirs import user_cache_dir
 if __name__ ==  "__main__":
 	from style import DEFAULT  # Beacuse it will fail when developing
 else: # When call this file
-	from .style import DEFAULT
+	from .style import DEFAULT  # noqa: F401 
 
 # Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
