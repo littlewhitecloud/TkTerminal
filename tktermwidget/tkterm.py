@@ -47,8 +47,9 @@ class Terminal(Frame):
 
     Args:
         master (Misc): The parent widget
-        autohide (bool, optional): Whether to autohide the scrollbars.
-        (Set true to enable it.)
+        style (dict, optional): Set the style for the Terminal widget
+        filehistory (str, optional): Set your own file history instead of the normal
+        autohide (bool, optional): Whether to autohide the scrollbars. Set true to enable.
         *args: Arguments for the text widget
         **kwargs: Keyword arguments for the text widget
 
@@ -106,6 +107,7 @@ class Terminal(Frame):
         if horizontal:
             self.text.config(xscrollcommand=self.xscroll.set)
             self.xscroll.config(command=self.text.xview)
+
         self.yscroll.config(command=self.text.yview)
 
         # Grid widgets
@@ -115,21 +117,23 @@ class Terminal(Frame):
 
         # self.yscroll.grid(row=1 if horizontal else 0, column=0 if horizontal else 1, sticky="ns")
         #                                    ^
-        # TODO: this line should check again |
+        # TODO: this line should check again | tag
 
         # Create command prompt
         self.directory()
 
-        # Set variables
-        self.longflag: bool = False
-        self.current_process: Popen | None = None
-        self.index: int = 1
-        self.cursor: int = self.text.index("insert")
+        # Set constants
         self.longsymbol: str = "\\" if not SYSTEM == "Windows" else "&&"
-        self.longcmd: str = ""
         self.filehistory: str = HISTORY_FILE if not filehistory else filehistory
 
-        self.latest: int = self.cursor
+        # Set variables
+        self.index: int = 1
+        self.longcmd: str = ""
+        self.longflag: bool = False
+        self.current_process: Popen | None = None
+        self.cursor: int = self.text.index("insert")
+
+        self.latest: int = self.cursor  # Init as the insert index, lazy to write again
 
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
@@ -139,6 +143,7 @@ class Terminal(Frame):
             self.text.bind(bind_str, self.left, add=True)
         for bind_str in ("<Return>", "<ButtonRelease-1>"):
             self.text.bind(bind_str, self.check, add=True)
+
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
         # History recorder
@@ -154,8 +159,6 @@ class Terminal(Frame):
     def check(self, _: Event) -> None:
         """Update cursor"""
         self.cursor = self.text.index("insert")
-        print("cur:", self.cursor)
-        print("late:", self.latest)
         if float(self.cursor) < float(self.latest):
             self.text.bind("<KeyPress>", self.ignore, True)
             self.text.bind("<KeyPress-BackSpace>", self.ignore, True)
@@ -214,7 +217,7 @@ class Terminal(Frame):
         return "break"
 
     def update(self) -> str:
-        """Update or the command has no output"""
+        """Update the text widget or the command has no output"""
         self.directory()
         self.check(None)
         self.latest = self.text.index("insert")
@@ -223,11 +226,12 @@ class Terminal(Frame):
 
     def loop(self, _: Event) -> str:
         """Create an input loop"""
-        # Get the command from the text
+        # Get the line from the text
         cmd = self.text.get(f"{self.index}.0", "end-1c")
+        # Split the command from the line
         cmd = cmd.split(SIGN)[-1].strip()
+        self.index += 1  # If return "break"
 
-        self.index += 1
         if self.longflag:
             self.longcmd += cmd
             cmd = self.longcmd
@@ -285,9 +289,11 @@ class Terminal(Frame):
         errors: str = output[1]
         returncode = self.current_process.returncode
         self.current_process = None
+
         if returncode != 0:
             returnlines += errors  # If the command was unsuccessful, it doesn't give stdout
         # TODO: Get the success message from the command (see #16)
+
         # Output to the text
         self.newline()
         for line in returnlines:
@@ -302,37 +308,23 @@ class Terminal(Frame):
 if __name__ == "__main__":
     from tkinter import Tk
 
-    # Create root window
     root = Tk()
-
-    # Hide root window during initialization
     root.withdraw()
-
-    # Set title
     root.title("Terminal")
 
-    # Create terminal
     term = Terminal(root)
     term.pack(expand=True, fill="both")
 
-    # Set minimum size and center app
-
-    # Update widgets so minimum size is accurate
     root.update_idletasks()
 
-    # Set the minimum size
     minimum_width: int = root.winfo_reqwidth()
     minimum_height: int = root.winfo_reqheight()
 
-    # Get center of screen based on minimum size
     x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
     y_coords = int(root.wm_maxsize()[1] / 2 - minimum_height / 2)
-    # Place app and make the minimum size the actual minimum size (non-infringable)
+
     root.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
     root.wm_minsize(minimum_width, minimum_height)
 
-    # Show root window
     root.deiconify()
-
-    # Start mainloop
     root.mainloop()

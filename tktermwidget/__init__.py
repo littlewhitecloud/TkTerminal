@@ -4,13 +4,15 @@ from pathlib import Path
 
 from platformdirs import user_cache_dir
 
-from .style import *  # noqa: F401
+from .style import *  # noqa: F401, F403
 from .tkterm import Terminal  # noqa: F401
 
-# Think we should put checks when load.
-PACKAGE_PATH = Path(user_cache_dir("tktermwidget"))  # Get the package path
-HISTORY_FILE = PACKAGE_PATH / "history.txt"  # Get the history file
-JSON_FILE = PACKAGE_PATH / "styles.json"  # Get the json file (style)
+# Get the package path
+PACKAGE_PATH = Path(user_cache_dir("tktermwidget"))
+# Get the history file
+HISTORY_FILE = PACKAGE_PATH / "history.txt"
+# Get the json file (style)
+JSON_FILE = PACKAGE_PATH / "styles.json"
 
 if not PACKAGE_PATH.exists():  # Check the "tktermwidget" is exsit
     PACKAGE_PATH.mkdir(parents=True)
