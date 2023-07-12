@@ -10,7 +10,7 @@ from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # For develop
     from style import DEFAULT
 else:
     from .style import DEFAULT
@@ -51,7 +51,7 @@ class Terminal(Frame):
         filehistory (str, optional): Set your own file history instead of the normal
         autohide (bool, optional): Whether to autohide the scrollbars. Set true to enable.
         *args: Arguments for the text widget
-        **kwargs: Keyword argu ments for the text widget
+        **kwargs: Keyword arguments for the text widget
 
     Methods for outside use:
         None
@@ -64,7 +64,7 @@ class Terminal(Frame):
         (So the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
         check (Event) -> None: Update cursor and check it if is out of the edit range
-        execute(Event) -> str: Execute the command"""
+        execute (Event) -> str: Execute the command"""
 
     def __init__(
         self, master: Misc, style: dict = DEFAULT, filehistory: str = None, autohide: bool = False, *args, **kwargs
@@ -126,6 +126,16 @@ class Terminal(Frame):
 
         self.latest: int = self.cursor
 
+        # History recorder
+        self.history = open(
+            self.filehistory,
+            "r+",  # Both read and write
+            encoding="utf-8",
+        )
+
+        self.historys = [i.strip() for i in self.history.readlines()]
+        self.historyindex = len(self.historys) - 1
+
         # Bind events
         self.text.bind("<Up>", self.up, add=True)
         self.text.bind("<Down>", self.down, add=True)
@@ -137,15 +147,7 @@ class Terminal(Frame):
 
         self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
 
-        # History recorder
-        self.history = open(
-            self.filehistory,
-            "r+",  # Both read and write
-            encoding="utf-8",
-        )
-
-        self.historys = [i.strip() for i in self.history.readlines()]
-        self.historyindex = len(self.historys) - 1
+        del horizontal
 
     def check(self, _: Event) -> None:
         """Update cursor and check if it is out of the edit range"""
@@ -294,6 +296,7 @@ class Terminal(Frame):
         insert_index = self.text.index("insert")
         dir_index = f"{insert_index.split('.')[0]}.{len(getcwd() + SIGN)}"
         if insert_index == dir_index:
+            del insert_index, dir_index
             return "break"
 
     def up(self, _: Event) -> str:
