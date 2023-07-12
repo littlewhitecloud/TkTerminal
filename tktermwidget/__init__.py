@@ -5,7 +5,7 @@ from pathlib import Path
 from platformdirs import user_cache_dir
 
 from .style import *  # noqa: F401, F403
-from .tkterm import Terminal  # noqa: F401
+from .widgets import Terminal  # noqa: F401
 
 # Get the package path
 PACKAGE_PATH = Path(user_cache_dir("tktermwidget"))
