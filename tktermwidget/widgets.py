@@ -1,7 +1,7 @@
 """Tkinter Terminal widget"""
 from __future__ import annotations
 
-from os import chdir, getcwd
+from os import getcwd
 from pathlib import Path
 from platform import system
 from subprocess import PIPE, Popen
@@ -10,8 +10,10 @@ from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
 
-if __name__ == "__main__": from style import DEFAULT
-else: from .style import DEFAULT
+if __name__ == "__main__":
+    from style import DEFAULT
+else:
+    from .style import DEFAULT
 
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 HISTORY_FILE = HISTORY_PATH / "history.txt"
@@ -19,10 +21,11 @@ SYSTEM = system()
 CREATE_NEWCONSOLE = 0
 SIGN = "$ "
 
-if SYSTEM == "Windows": # Check if platform is windows
+if SYSTEM == "Windows":  # Check if platform is windows
     from subprocess import CREATE_NEW_CONSOLE
 
     SIGN = ">"
+
 
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
@@ -62,13 +65,20 @@ class Terminal(Frame):
         kill (Event) -> str: Kills the current command
         loop (Event) -> str: Runs the command typed"""
 
-    def __init__(self, master: Misc, style: dict = DEFAULT, filehistory: str = None, autohide: bool = False, *args, **kwargs):
+    def __init__(
+        self, master: Misc, 
+        style: dict = DEFAULT, 
+        filehistory: str = None, 
+        autohide: bool = False, 
+        *args, 
+        **kwargs
+    ):
         Frame.__init__(self, master)
-		
-		# Set row and column weights
+
+        # Set row and column weights
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
-        
+
         # Create text widget and x, y scrollbar
         self.style: dict = style
         horizontal: bool = False
@@ -92,18 +102,18 @@ class Terminal(Frame):
             selectbackground=kwargs.get("selectbackground", self.style["selectbackground"]),
             selectforeground=kwargs.get("selectforeground", self.style["selectforeground"]),
         )
-        
+
         if horizontal:
             self.text.config(xscrollcommand=self.xscroll.set)
             self.xscroll.config(command=self.text.xview)
         self.yscroll.config(command=self.text.yview)
-        
+
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
         if horizontal:
             self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
-        
+
         # Init command prompt
         self.directory()
 
@@ -134,56 +144,53 @@ class Terminal(Frame):
         # History recorder
         self.history = open(
             self.filehistory,
-            "r+", # Both read and write
+            "r+",  # Both read and write
             encoding="utf-8",
         )
 
         self.historys = [i.strip() for i in self.history.readlines()]
         self.historyindex = len(self.historys) - 1
-        
+
     def check(self, _: Event) -> None:
         """Update cursor and check if it is out of the edit range"""
-        self.cursor = self.text.index("insert") # Update cursor
+        self.cursor = self.text.index("insert")  # Update cursor
         if float(self.cursor) < float(self.latest):
             for bind_str in ("<KeyPress>", "<KeyPress-BackSpace>"):
                 self.text.bind(bind_str, lambda _: "break", add=True)
         else:
             for unbind_str in ("<KeyPress>", "<KeyPress-BackSpace>"):
                 self.text.unbind(unbind_str)
-	
+
     def directory(self) -> None:
         """Insert the directory"""
-        self.text.insert(
-            "insert",
-            getcwd() + SIGN
-        )
-	
-    def kill(self, _: Evnet) -> str:
+        self.text.insert("insert", getcwd() + SIGN)
+
+    def kill(self, _: Event) -> str:
         """Kill the current process"""
         if self.current_process:
             self.current_process.terminate()
             self.current_process = None
         return "break"
-	
+
     def execute(self, _: Event) -> str:
         """Execute the command"""
         # Get the line from the text
         cmd = self.text.get(f"{self.index}.0", "end-1c")
         # Split the command from the line also strip
         cmd = cmd.split(SIGN)[-1].strip()
-        self.index += 1 # if some "if" statement return "break"
-		
+        self.index += 1  # if some "if" statement return "break"
+
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
             self.longflag = True
             self.newline()
             return "break"
-		
+
         if self.longflag:
             cmd = self.longcmd + cmd
             self.longcmd = ""
             self.longflag = False
-            
+
         if cmd:  # Record the command if it isn't empty
             self.history.write(cmd + "\n")
             self.historys.append(cmd)
@@ -201,11 +208,11 @@ class Terminal(Frame):
             return "break"
         elif cmd == "exit":
             self.master.quit()
-	
-		# Set the insert position is at the end
+
+        # Set the insert position is at the end
         self.text.mark_set("insert", f"{self.index}.end")
         self.text.see("insert")
-        
+
         # TODO: Refactor the way we get output from subprocess
         # Run the command
         self.current_process = Popen(
@@ -219,14 +226,14 @@ class Terminal(Frame):
             creationflags=CREATE_NEW_CONSOLE,
         )
         # The following needs to be put in an after so the kill command works
-        
+
         # Check if the command was successful
         output: tuple = self.current_process.communicate()
         returnlines: str = output[0]
         errors: str = output[1]
         returncode = self.current_process.returncode
         self.current_process = None
-        
+
         if returncode != 0:
             returnlines += errors  # If the command was unsuccessful, it doesn't give stdout
         # TODO: Get the success message from the command (see #16)
@@ -240,7 +247,6 @@ class Terminal(Frame):
         self.index = int(self.text.index("insert").split(".")[0])
         self.update()
         return "break"  # Prevent the default newline character insertion
-
 
     def newline(self) -> None:
         """Insert a newline"""
@@ -258,7 +264,7 @@ class Terminal(Frame):
         self.text.see("end")
         return "break"
 
-	# Keypress
+    # Keypress
     def down(self, _: Event) -> str:
         """Go down in the history"""
         if self.historyindex < len(self.historys) - 1:
@@ -272,14 +278,14 @@ class Terminal(Frame):
             self.text.delete(f"{self.index}.0", "end-1c")
             self.directory()
         return "break"
-	
+
     def left(self, _: Event) -> str | None:
         """Go left in the command if the command is greater than the path"""
         insert_index = self.text.index("insert")
         dir_index = f"{insert_index.split('.')[0]}.{len(getcwd() + SIGN)}"
         if insert_index == dir_index:
             return "break"
-	
+
     def up(self, _: Event) -> str:
         """Go up in the history"""
         if self.historyindex >= 0:
@@ -289,8 +295,8 @@ class Terminal(Frame):
             self.text.insert("insert", self.historys[self.historyindex])
             self.historyindex -= 1
         return "break"
-	
-	
+
+
 if __name__ == "__main__":
     from tkinter import Tk
 
