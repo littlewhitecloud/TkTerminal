@@ -63,7 +63,8 @@ class Terminal(Frame):
         left (Event) -> str: Goes left in the command if the index is greater than the directory
         (So the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
-        loop (Event) -> str: Runs the command typed"""
+        check (Event) -> None: Update cursor and check it if is out of the edit range
+        execute(Event) -> str: Execute the command"""
 
     def __init__(
         self, master: Misc, 
