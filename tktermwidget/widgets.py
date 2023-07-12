@@ -1,7 +1,7 @@
 """Tkinter Terminal widget"""
 from __future__ import annotations
 
-from os import getcwd, chdir, path
+from os import chdir, getcwd, path
 from pathlib import Path
 from platform import system
 from subprocess import PIPE, Popen
@@ -67,12 +67,7 @@ class Terminal(Frame):
         execute(Event) -> str: Execute the command"""
 
     def __init__(
-        self, master: Misc,
-        style: dict = DEFAULT,
-        filehistory: str = None,
-        autohide: bool = False,
-        *args,
-        **kwargs
+        self, master: Misc, style: dict = DEFAULT, filehistory: str = None, autohide: bool = False, *args, **kwargs
     ):
         Frame.__init__(self, master)
 
@@ -180,8 +175,8 @@ class Terminal(Frame):
         # Split the command from the line also strip
         cmd = cmd.split(SIGN)[-1].strip()
 
-        # TODO: get rid off all return "break" in if statements 
-        #       use the flag leave: bool instead of 
+        # TODO: get rid off all return "break" in if statements
+        #       use the flag leave: bool instead of
 
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
@@ -211,7 +206,7 @@ class Terminal(Frame):
             return "break"
         elif cmd == "exit":
             self.master.quit()
-        elif cmd.startswith("cd"): # TAG: is all platform use cd...?
+        elif cmd.startswith("cd"):  # TAG: is all platform use cd...?
             if cmd == "cd..":
                 chdir(path.abspath(path.join(getcwd(), "..")))
             else:
@@ -219,7 +214,6 @@ class Terminal(Frame):
             self.newline()
             self.directory()
             return "break"
-			
 
         # Set the insert position is at the end
         self.text.mark_set("insert", f"{self.index}.end")
@@ -259,8 +253,8 @@ class Terminal(Frame):
         self.index = int(self.text.index("insert").split(".")[0])
         self.update()
         print(self.index)
-        
-        del returnlines, errors,  returncode, cmd
+
+        del returnlines, errors, returncode, cmd
         return "break"  # Prevent the default newline character insertion
 
     def newline(self) -> None:

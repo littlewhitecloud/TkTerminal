@@ -89,7 +89,7 @@ class Config(Tk):
             from sv_ttk import set_theme
 
             set_theme("dark" if isDark() else "light")
-            self.option_add("*font", ("Cascadia Mono", 9))
+            self.option_add("*font", ("Consolas", 9))
 
             if isDark():
                 from ctypes import byref, c_int, sizeof, windll
