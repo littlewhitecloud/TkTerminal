@@ -67,11 +67,11 @@ class Terminal(Frame):
         execute(Event) -> str: Execute the command"""
 
     def __init__(
-        self, master: Misc, 
-        style: dict = DEFAULT, 
-        filehistory: str = None, 
-        autohide: bool = False, 
-        *args, 
+        self, master: Misc,
+        style: dict = DEFAULT,
+        filehistory: str = None,
+        autohide: bool = False,
+        *args,
         **kwargs
     ):
         Frame.__init__(self, master)
