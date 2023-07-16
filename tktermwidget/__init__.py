@@ -4,9 +4,6 @@ from pathlib import Path
 
 from platformdirs import user_cache_dir
 
-from .style import *  # noqa: F401, F403
-from .widgets import Terminal  # noqa: F401
-
 # Get the package path
 PACKAGE_PATH = Path(user_cache_dir("tktermwidget"))
 # Get the history file
@@ -32,3 +29,6 @@ if not (HISTORY_FILE).exists():
 if not (JSON_FILE).exists():
     with open(JSON_FILE, "w", encoding="utf-8") as f:
         dump("{}", f)
+
+from .style import *  # noqa: F401, F403
+from .widgets import Terminal  # noqa: F401
