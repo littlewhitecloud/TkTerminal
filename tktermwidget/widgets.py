@@ -30,7 +30,7 @@ if SYSTEM == "Windows":  # Check if platform is windows
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
 
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master: Misc = None, **kwargs):
         Scrollbar.__init__(self, master=master, **kwargs)
 
     def set(self, first: int, last: int):
@@ -208,8 +208,8 @@ class Terminal(Frame):
         elif cmd == "exit":
             self.master.quit()
         elif cmd.startswith("cd"):  # TAG: is all platform use cd...?
-			# It will raise OSError instead of output a normal error
-			# TODO: fix it
+            # It will raise OSError instead of output a normal error
+            # TODO: fix it
             if cmd == "cd..":
                 chdir(path.abspath(path.join(getcwd(), "..")))
             else:
