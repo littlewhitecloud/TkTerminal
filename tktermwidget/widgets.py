@@ -203,10 +203,13 @@ class Terminal(Frame):
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.directory()
+            self.index = 1
             return "break"
         elif cmd == "exit":
             self.master.quit()
         elif cmd.startswith("cd"):  # TAG: is all platform use cd...?
+			# It will raise OSError instead of output a normal error
+			# TODO: fix it
             if cmd == "cd..":
                 chdir(path.abspath(path.join(getcwd(), "..")))
             else:
@@ -252,8 +255,6 @@ class Terminal(Frame):
         # Update the text and the index
         self.index = int(self.text.index("insert").split(".")[0])
         self.update()
-
-        del cmd, errors, returncode, returnlines
         return "break"  # Prevent the default newline character insertion
 
     def newline(self) -> None:
@@ -263,6 +264,8 @@ class Terminal(Frame):
 
     def update(self) -> str:
         """Update the text widget or the command has no output"""
+        # Make a newline
+        self.newline()
         # Insert the directory
         self.directory()
         # Update cursor and check if it is out of the edit range
