@@ -76,7 +76,7 @@ def load_style() -> dict:
 
 class Config(Tk):
     """A config gui for user to edit their custom styles
-    
+
     Args:
         edit (bool): Enable the edit the text in the render
         basedon (dict): Create a style based on the style you choose
@@ -94,14 +94,15 @@ class Config(Tk):
 
         # Apply sv_ttk theme to the window
         if usetheme:
-            try: 
+            try:
                 from darkdetect import isDark
                 from sv_ttk import set_theme
-            except:
+            except ImportError:
                 usetheme = False
             else:
                 set_theme("dark" if isDark() else "light")
                 self.option_add("*font", ("Cascadia Mono", 9))
+
                 # Enable window's darkmode
                 if isDark():
                     from ctypes import byref, c_int, sizeof, windll
@@ -127,7 +128,7 @@ class Config(Tk):
         background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
         backgroundentry = Entry(backgroundframe)
         backgroundbutton = Button(backgroundframe, command=lambda: self.selectcolor(backgroundentry, "background"))
-        
+
         # TODO: improve all the labels' text
         insertbackgroundframe = Frame(self)
         insertbackground = Label(insertbackgroundframe, text="Choose or input your insertbackground hex color")
@@ -170,7 +171,7 @@ class Config(Tk):
             selectbackground=self.style["selectbackground"],
             selectforeground=self.style["selectforeground"],
         )
-        
+
         # Write down some example text
         self.render.insert("insert", "This is a normal text for test style.")
         self.render.tag_add("select", "1.28", "1.39")
@@ -178,7 +179,7 @@ class Config(Tk):
             "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
         )
         self.render["state"] = "normal" if edit else "disable"
-        
+
         # Apply the theme to the button widgets if usetheme is True
         if usetheme:
             for widget in (
@@ -197,14 +198,14 @@ class Config(Tk):
             self.style.values(),
         ):
             widget.insert("insert", hexcolor)
-        
+
         # Bind some events
         backgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "background"))
         insertbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "insertbackground"))
         selectbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectbackground"))
         selectforegroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectforeground"))
         foregroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "foreground"))
-            
+
         # Pack the widgets
         cancel.pack(side="right", padx=1)
         save.pack(side="right", padx=3)
@@ -284,10 +285,11 @@ class Config(Tk):
         else:
             event.widget.state(["!invalid"])
 
+
 # Load the custom style
 CUSTOM: dict[str] = load_style() if load_style() != {} else DEFAULT
 
 if __name__ == "__main__":
     # An example basedon "powershell" style and also use sv_ttk theme
-    configstyle = Config(edit = True, basedon=POWERSHELL, usetheme = True)
+    configstyle = Config(edit=True, basedon=POWERSHELL, usetheme=True)
     configstyle.mainloop()
