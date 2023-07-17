@@ -173,13 +173,11 @@ class Terminal(Frame):
     def execute(self, _: Event) -> str:
         """Execute the command"""
         # Get the line from the text
-        cmd = self.text.get(f"{self.index}.0", "end-1c")
+        cmd: str = self.text.get(f"{self.index}.0", "end-1c")
         # Split the command from the line also strip
         cmd = cmd.split(SIGN)[-1].strip()
 
-        # TODO: get rid off all return "break" in if statements
-        #       use the flag leave: bool instead of
-
+        # Special check
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
             self.longflag = True
@@ -254,9 +252,8 @@ class Terminal(Frame):
         # Update the text and the index
         self.index = int(self.text.index("insert").split(".")[0])
         self.update()
-        print(self.index)
 
-        del returnlines, errors, returncode, cmd
+        del cmd, errors, returncode, returnlines
         return "break"  # Prevent the default newline character insertion
 
     def newline(self) -> None:
