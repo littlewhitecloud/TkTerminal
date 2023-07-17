@@ -1,7 +1,7 @@
 """Import tktermwidget package"""
-import utils
+from .utils import check
 
-utils.check()  # Check the files
+check()  # Check the files
 
 # Import them after the check
 from .style import *  # noqa: F401, F403, E402
