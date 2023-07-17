@@ -1,4 +1,4 @@
-"""Styles for terminal widget"""
+"""Write or config styles for terminal widget"""
 from __future__ import annotations
 
 from json import dump, load
@@ -14,14 +14,16 @@ from platformdirs import user_cache_dir
 STYLE_PATH = Path(user_cache_dir("tktermwidget"))
 JSON_FILE = STYLE_PATH / "styles.json"
 
-# Styles format:
-# {yourstylename}: dict[str] = {
-#    "background": "{yourhexcolor}",
-#    "insertbackground": "{yourhexcolor}",
-#    "selectbackground": "{yourhexcolor}",
-#    "selectforeground": "{yourhexcolor}",
-#    "foreground": "{yourhexcolor}",
-# }
+"""
+# A style example
+{stylename}: dict[str] = {  # Style for {...}
+    "background": "{hexcolor}",
+    "insertbackground": "{hexcolor}",
+    "selectbackground": "{hexcolor}",
+    "selectforeground": "{hexcolor}",
+    "foreground": "{hexcolor}",
+}
+"""
 
 # Built-in styles
 DEFAULT: dict[str] = {  # Style for normal tkterminalwidget
@@ -57,7 +59,6 @@ GIT: dict[str] = {  # Style for "git.exe"
 }
 
 
-# Functions
 def write_style(**styles) -> None:
     """Write the style into the json file"""
     # User can call this function to write the style without gui
@@ -73,37 +74,50 @@ def load_style() -> dict:
         return load(f)
 
 
-# Class
 class Config(Tk):
-    """ "A config gui for user to edit their custom styles"""
+    """A config gui for user to edit their custom styles
+    
+    Args:
+        edit (bool): Enable the edit the text in the render
+        basedon (dict): Create a style based on the style you choose
+        usetheme (bool): Enable the apply sv_ttk theme to the window
+    """
 
-    def __init__(self, usetheme: bool = False, basedon: dict[str] = DEFAULT):
+    def __init__(self, edit: bool = False, basedon: dict[str] = DEFAULT, usetheme: bool = False):
         super().__init__()
+
+        # Setup window
         self.geometry("855x525")
         self.title("Config your custom style")
         self.resizable(False, False)
-        self.iconbitmap("")  # Must call this function or we can't get the hwnd
+        self.iconbitmap("")
 
+        # Apply sv_ttk theme to the window
         if usetheme:
-            from darkdetect import isDark
-            from sv_ttk import set_theme
+            try: 
+                from darkdetect import isDark
+                from sv_ttk import set_theme
+            except:
+                usetheme = False
+            else:
+                set_theme("dark" if isDark() else "light")
+                self.option_add("*font", ("Cascadia Mono", 9))
+                # Enable window's darkmode
+                if isDark():
+                    from ctypes import byref, c_int, sizeof, windll
 
-            set_theme("dark" if isDark() else "light")
-            self.option_add("*font", ("Cascadia Mono", 9))
+                    windll.dwmapi.DwmSetWindowAttribute(
+                        windll.user32.GetParent(self.winfo_id()), 20, byref(c_int(2)), sizeof(c_int(2))
+                    )
+                    self.withdraw()
+                    self.deiconify()
 
-            if isDark():
-                from ctypes import byref, c_int, sizeof, windll
-
-                windll.dwmapi.DwmSetWindowAttribute(
-                    windll.user32.GetParent(self.winfo_id()), 20, byref(c_int(2)), sizeof(c_int(2))
-                )
-                self.withdraw()
-                self.deiconify()
-
+        # If basedon is not DEFAULT then use basedon
+        # If basedon is DEFAULT then use load_style()
+        # If load_style() return a empty dict then use DEFAULT
         self.style: dict[str] = basedon if basedon != DEFAULT else load_style() if load_style() != {} else DEFAULT
 
         # Color choose or input widgets
-        # TODO: check the hex color is it vaild
         buttonframe = Frame(self)
         save = Button(buttonframe, text="Save", width=6, command=self.savestyle)
         cancel = Button(buttonframe, text="Cancel", width=6, command=self.destroy)
@@ -113,7 +127,8 @@ class Config(Tk):
         background = Label(backgroundframe, text="Choose or input your normalbackground hex color")
         backgroundentry = Entry(backgroundframe)
         backgroundbutton = Button(backgroundframe, command=lambda: self.selectcolor(backgroundentry, "background"))
-
+        
+        # TODO: improve all the labels' text
         insertbackgroundframe = Frame(self)
         insertbackground = Label(insertbackgroundframe, text="Choose or input your insertbackground hex color")
         insertbackgroundentry = Entry(insertbackgroundframe)
@@ -143,27 +158,28 @@ class Config(Tk):
         foregroundentry = Entry(foregroundframe)
         foregroundbutton = Button(foregroundframe, command=lambda: self.selectcolor(foregroundentry, "foreground"))
 
-        # Style render configs
+        # Config style render
         self.render = Text(
             self,
             width=40,
+            relief="flat",
+            font=("Cascadia Mono", 9, "normal"),
+            foreground=self.style["foreground"],
             background=self.style["background"],
             insertbackground=self.style["insertbackground"],
             selectbackground=self.style["selectbackground"],
             selectforeground=self.style["selectforeground"],
-            foreground=self.style["foreground"],
-            font=("Cascadia Mono", 9, "normal"),
-            relief="flat",
         )
-
+        
+        # Write down some example text
         self.render.insert("insert", "This is a normal text for test style.")
-        self.render.tag_add("select", "1.31", "1.36")
+        self.render.tag_add("select", "1.28", "1.39")
         self.render.tag_config(
             "select", background=self.style["selectbackground"], foreground=self.style["selectforeground"]
         )
-        self.render["state"] = "disable"
-
-        # add the theme to the button widgets if usetheme == True
+        self.render["state"] = "normal" if edit else "disable"
+        
+        # Apply the theme to the button widgets if usetheme is True
         if usetheme:
             for widget in (
                 backgroundbutton,
@@ -175,13 +191,20 @@ class Config(Tk):
                 widget.config(style="Accent.TButton", width=2, text="🎨")
             save.config(style="Accent.TButton")
 
-        # fill the entry with hexcolor before pack
+        # Fill the entry with hexcolor
         for widget, hexcolor in zip(
             (backgroundentry, insertbackgroundentry, selectbackgroundentry, selectforegroundentry, foregroundentry),
             self.style.values(),
         ):
             widget.insert("insert", hexcolor)
-
+        
+        # Bind some events
+        backgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "background"))
+        insertbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "insertbackground"))
+        selectbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectbackground"))
+        selectforegroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectforeground"))
+        foregroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "foreground"))
+            
         # Pack the widgets
         cancel.pack(side="right", padx=1)
         save.pack(side="right", padx=3)
@@ -209,12 +232,6 @@ class Config(Tk):
         ):
             widget.pack(side="left", padx=3)
 
-        backgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "background"))
-        insertbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "insertbackground"))
-        selectbackgroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectbackground"))
-        selectforegroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "selectforeground"))
-        foregroundentry.bind("<KeyPress>", lambda event: self.checkhexcolor(event, "foreground"))
-
         for widget in (
             backgroundframe,
             insertbackgroundframe,
@@ -234,7 +251,7 @@ class Config(Tk):
         self.updaterender()  # update the render to show the latest style
 
     def updaterender(self) -> None:
-        """Let the render show with the latest style"""
+        """Let the render widget render with the latest style"""
         self.render.config(
             background=self.style["background"],
             insertbackground=self.style["insertbackground"],
@@ -248,7 +265,7 @@ class Config(Tk):
         self.update()
 
     def savestyle(self) -> None:
-        """Save the style"""
+        """Save the style to the json file"""
         write_style(
             background=self.style["background"],
             insertbackground=self.style["insertbackground"],
@@ -259,7 +276,7 @@ class Config(Tk):
         self.destroy()
 
     def checkhexcolor(self, event: Event, name: str) -> None:
-        """Check the hex color"""
+        """Check the hex color is vaild"""
         if match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", event.widget.get()):
             event.widget.state(["invalid"])
             self.style[name] = event.widget.get()
@@ -267,10 +284,10 @@ class Config(Tk):
         else:
             event.widget.state(["!invalid"])
 
-
-CUSTOM: dict[str] = load_style()
+# Load the custom style
+CUSTOM: dict[str] = load_style() if load_style() != {} else DEFAULT
 
 if __name__ == "__main__":
-    # An example or a test
-    configstyle = Config(True, basedon=POWERSHELL)
+    # An example basedon "powershell" style and also use sv_ttk theme
+    configstyle = Config(edit = True, basedon=POWERSHELL, usetheme = True)
     configstyle.mainloop()
