@@ -1,3 +1,8 @@
-"""Tktermwidget package"""
-from .style import *  # noqa: F401
-from .tkterm import Terminal  # noqa: F401
+"""Import tktermwidget package"""
+from .utils import check
+
+check()  # Check the files
+
+# Import them after the check
+from .style import *  # noqa: F401, F403, E402
+from .widgets import Terminal  # noqa: F401, E402

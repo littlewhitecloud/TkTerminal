@@ -1,7 +1,9 @@
 <h1 align="center"> TkTerminal </h1>
 
-[![PyPI](https://img.shields.io/pypi/v/tktermwidget)](https://pypi.org/project/tktermwidget)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/powershellgallery/p/Pester?color=blue)
+[![PyPI](https://img.shields.io/pypi/v/tktermwidget)](https://pypi.org/project/tktermwidget)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 ```TkTermianl``` 是一个使用 tkinter 用 Python 编写的终端模拟器
 
@@ -57,7 +59,7 @@ pip install tktermwidget
 
 ## 样例:
 ```python
-# -*- coding: gbk -*-
+"""An example for tktermwidget"""
 from tkinter import Tk
 
 from tkterm import Terminal
