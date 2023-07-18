@@ -59,7 +59,7 @@ pip install tktermwidget
 
 ## 样例:
 ```python
-# -*- coding: gbk -*-
+"""An example for tktermwidget"""
 from tkinter import Tk
 
 from tkterm import Terminal
