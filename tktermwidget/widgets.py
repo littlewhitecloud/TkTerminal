@@ -1,7 +1,7 @@
-"""Terminal widget for tkinter"""
+"""Tkinter Terminal widget"""
 from __future__ import annotations
 
-from os import getcwd
+from os import chdir, getcwd, path
 from pathlib import Path
 from platform import system
 from subprocess import PIPE, Popen
@@ -10,41 +10,27 @@ from tkinter.ttk import Frame, Scrollbar
 
 from platformdirs import user_cache_dir
 
-dev: bool = False
-if dev:
+if __name__ == "__main__":  # For develop
     from style import DEFAULT
 else:
-    from .style import DEFAULT # noqa: F401
+    from .style import DEFAULT
 
-# Set constants
 HISTORY_PATH = Path(user_cache_dir("tktermwidget"))
 HISTORY_FILE = HISTORY_PATH / "history.txt"
 SYSTEM = system()
-if SYSTEM == "Windows":
+CREATE_NEWCONSOLE = 0
+SIGN = "$ "
+
+if SYSTEM == "Windows":  # Check if platform is windows
     from subprocess import CREATE_NEW_CONSOLE
 
     SIGN = ">"
-else:
-    CREATE_NEW_CONSOLE = 0
-    SIGN = "$ "
-
-# Check that the history directory exists
-if not HISTORY_PATH.exists():
-    HISTORY_PATH.mkdir(parents=True)
-    # Also create the history file
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        f.close()
-
-# Check that the history file exists
-if not (HISTORY_FILE).exists():
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        f.close()
 
 
 class AutoHideScrollbar(Scrollbar):
     """Scrollbar that automatically hides when not needed"""
 
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master: Misc = None, **kwargs):
         Scrollbar.__init__(self, master=master, **kwargs)
 
     def set(self, first: int, last: int):
@@ -61,8 +47,9 @@ class Terminal(Frame):
 
     Args:
         master (Misc): The parent widget
-        autohide (bool, optional): Whether to autohide the scrollbars.
-        (Set true to enable it.)
+        style (dict, optional): Set the style for the Terminal widget
+        filehistory (str, optional): Set your own file history instead of the normal
+        autohide (bool, optional): Whether to autohide the scrollbars. Set true to enable.
         *args: Arguments for the text widget
         **kwargs: Keyword arguments for the text widget
 
@@ -76,16 +63,11 @@ class Terminal(Frame):
         left (Event) -> str: Goes left in the command if the index is greater than the directory
         (So the user can't delete the directory or go left of it)
         kill (Event) -> str: Kills the current command
-        loop (Event) -> str: Runs the command typed"""
+        check (Event) -> None: Update cursor and check it if is out of the edit range
+        execute (Event) -> str: Execute the command"""
 
     def __init__(
-        self,
-        master: Misc,
-        style: dict = DEFAULT,
-        filehistory: str = None,
-        autohide: bool = False,
-        *args,
-        **kwargs,
+        self, master: Misc, style: dict = DEFAULT, filehistory: str = None, autohide: bool = False, *args, **kwargs
     ):
         Frame.__init__(self, master)
 
@@ -93,30 +75,30 @@ class Terminal(Frame):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
-        # Create text widget and scrollbars
-        self.style = style
-
-        scrollbars = Scrollbar if not autohide else AutoHideScrollbar
+        # Create text widget and x, y scrollbar
+        self.style: dict = style
         horizontal: bool = False
+        scrollbar = Scrollbar if not autohide else AutoHideScrollbar
+
         if kwargs.get("wrap", "char") == "none":
-            self.xscroll = scrollbars(self, orient="horizontal")
-            self.xscroll.grid(row=1, column=0, sticky="ew")
+            self.xscroll = scrollbar(self, orient="horizontal")
             horizontal = True
 
-        self.yscroll = scrollbars(self)
+        self.yscroll = scrollbar(self)
         self.text = Text(
             self,
             *args,
+            wrap=kwargs.get("wrap", "char"),
+            yscrollcommand=self.yscroll.set,
+            relief=kwargs.get("relief", "flat"),
+            font=kwargs.get("font", ("Cascadia Code", 9, "normal")),
+            foreground=kwargs.get("foreground", self.style["foreground"]),
             background=kwargs.get("background", self.style["background"]),
             insertbackground=kwargs.get("insertbackground", self.style["insertbackground"]),
             selectbackground=kwargs.get("selectbackground", self.style["selectbackground"]),
             selectforeground=kwargs.get("selectforeground", self.style["selectforeground"]),
-            relief=kwargs.get("relief", "flat"),
-            foreground=kwargs.get("foreground", self.style["foreground"]),
-            yscrollcommand=self.yscroll.set,
-            wrap=kwargs.get("wrap", "char"),
-            font=kwargs.get("font", ("Cascadia Code", 9, "normal")),
         )
+
         if horizontal:
             self.text.config(xscrollcommand=self.xscroll.set)
             self.xscroll.config(command=self.text.xview)
@@ -124,130 +106,88 @@ class Terminal(Frame):
 
         # Grid widgets
         self.text.grid(row=0, column=0, sticky="nsew")
-
+        if horizontal:
+            self.xscroll.grid(row=1, column=0, sticky="ew")
         self.yscroll.grid(row=0, column=1, sticky="ns")
-        # self.yscroll.grid(row=1 if horizontal else 0, column=0 if horizontal else 1, sticky="ns")
 
-        # Create command prompt
+        # Init command prompt
         self.directory()
 
-        # Set variables
-        self.longflag: bool = False
-        self.current_process: Popen | None = None
-        self.index: int = 1
-        self.cursor: int = self.text.index("insert")
+        # Set constants
         self.longsymbol: str = "\\" if not SYSTEM == "Windows" else "&&"
-        self.longcmd: str = ""
         self.filehistory: str = HISTORY_FILE if not filehistory else filehistory
 
-        self.latest: int = self.cursor
+        # Set variables
+        self.index: int = 1
+        self.longcmd: str = ""
+        self.longflag: bool = False
+        self.current_process: Popen | None = None
+        self.cursor: int = self.text.index("insert")
 
-        # Bind events
-        self.text.bind("<Up>", self.up, add=True)
-        self.text.bind("<Down>", self.down, add=True)
-        self.text.bind("<Return>", self.loop, add=True)
-        for bind_str in ("<Left>", "<BackSpace>"):
-            self.text.bind(bind_str, self.left, add=True)
-        for bind_str in ("<Return>", "<ButtonRelease-1>"):
-            self.text.bind(bind_str, self.check, add=True)
-        self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
+        self.latest: int = self.cursor
 
         # History recorder
         self.history = open(
             self.filehistory,
-            "r+",
+            "r+",  # Both read and write
             encoding="utf-8",
         )
 
-        self.historys = [i.strip() for i in self.history.readlines() if i.strip()]
+        self.historys = [i.strip() for i in self.history.readlines()]
         self.historyindex = len(self.historys) - 1
 
+        # Bind events
+        self.text.bind("<Up>", self.up, add=True)
+        self.text.bind("<Down>", self.down, add=True)
+        self.text.bind("<Return>", self.execute, add=True)
+        for bind_str in ("<Left>", "<BackSpace>"):
+            self.text.bind(bind_str, self.left, add=True)
+        for bind_str in ("<Return>", "<ButtonRelease-1>", "<Left>", "<Right>"):
+            self.text.bind(bind_str, self.check, add=True)
+
+        self.text.bind("<Control-KeyPress-c>", self.kill, add=True)  # Isn't working
+
+        del horizontal
+
     def check(self, _: Event) -> None:
-        """Update cursor"""
-        self.cursor = self.text.index("insert")
+        """Update cursor and check if it is out of the edit range"""
+        self.cursor = self.text.index("insert")  # Update cursor
         if float(self.cursor) < float(self.latest):
-            self.text.bind("<KeyPress>", self.ignore, True)
-            self.text.bind("<KeyPress-BackSpace>", self.ignore, True)
-        elif float(self.cursor) >= float(self.latest):
-            self.text.unbind("<Key>")
-            self.text.unbind("<KeyPress-Backspace>")
+            for bind_str in ("<KeyPress>", "<KeyPress-BackSpace>"):
+                self.text.bind(bind_str, lambda _: "break", add=True)
+        else:
+            for unbind_str in ("<KeyPress>", "<KeyPress-BackSpace>"):
+                self.text.unbind(unbind_str)
 
     def directory(self) -> None:
         """Insert the directory"""
         self.text.insert("insert", getcwd() + SIGN)
 
-    def newline(self) -> None:
-        """Insert a newline"""
-        self.text.insert("insert", "\n")
-        self.index += 1
-
-    def ignore(self, _: Event) -> str:
-        """Ignore the event"""
-        return "break"
-
-    def up(self, _: Event) -> str:
-        """Go up in the history"""
-        if self.historyindex >= 0:
-            self.text.delete(f"{self.index}.0", "end-1c")
-            self.directory()
-            # Insert the command
-            self.text.insert("insert", self.historys[self.historyindex].strip())
-            self.historyindex -= 1
-        return "break"
-
-    def down(self, _: Event) -> str:
-        """Go down in the history"""
-        if self.historyindex < len(self.historys) - 1:
-            self.text.delete(f"{self.index}.0", "end-1c")
-            self.directory()
-            # Insert the command
-            self.text.insert("insert", self.historys[self.historyindex].strip())
-            self.historyindex += 1
-        else:
-            # Clear the command
-            self.text.delete(f"{self.index}.0", "end-1c")
-            self.directory()
-        return "break"
-
-    def left(self, _: Event) -> str:
-        """Go left in the command if the command is greater than the path"""
-        insert_index = self.text.index("insert")
-        dir_index = f"{insert_index.split('.')[0]}.{len(getcwd() + SIGN)}"
-        if insert_index == dir_index:
-            return "break"
-
     def kill(self, _: Event) -> str:
         """Kill the current process"""
         if self.current_process:
-            self.current_process.kill()
+            self.current_process.terminate()
             self.current_process = None
         return "break"
 
-    def update(self) -> str:
-        """Update or the command has no output"""
-        self.directory()
-        self.check(None)
-        self.latest = self.text.index("insert")
-        self.text.see("end")
-        return "break"
-
-    def loop(self, _: Event) -> str:
-        """Create an input loop"""
-        # Get the command from the text
-        cmd = self.text.get(f"{self.index}.0", "end-1c")
+    def execute(self, _: Event) -> str:
+        """Execute the command"""
+        # Get the line from the text
+        cmd: str = self.text.get(f"{self.index}.0", "end-1c")
+        # Split the command from the line also strip
         cmd = cmd.split(SIGN)[-1].strip()
 
-        if self.longflag:
-            self.longcmd += cmd
-            cmd = self.longcmd
-            self.longcmd = ""
-            self.longflag = False
-
+        # Special check
         if cmd.endswith(self.longsymbol):
             self.longcmd += cmd.split(self.longsymbol)[0]
             self.longflag = True
             self.newline()
             return "break"
+
+        if self.longflag:
+            cmd = self.longcmd + cmd
+            self.longcmd = ""
+            self.longflag = False
 
         if cmd:  # Record the command if it isn't empty
             self.history.write(cmd + "\n")
@@ -263,14 +203,24 @@ class Terminal(Frame):
         if cmd in ["clear", "cls"]:
             self.text.delete("1.0", "end")
             self.directory()
+            self.index = 1
             return "break"
         elif cmd == "exit":
             self.master.quit()
+        elif cmd.startswith("cd"):  # TAG: is all platform use cd...?
+            # It will raise OSError instead of output a normal error
+            # TODO: fix it
+            if cmd == "cd..":
+                chdir(path.abspath(path.join(getcwd(), "..")))
+            else:
+                chdir(cmd.split()[-1])
+            self.newline()
+            self.directory()
+            return "break"
 
-        # Check that the insert position is at the end
-        if self.text.index("insert") != f"{self.index}.end":
-            self.text.mark_set("insert", f"{self.index}.end")
-            self.text.see("insert")
+        # Set the insert position is at the end
+        self.text.mark_set("insert", f"{self.index}.end")
+        self.text.see("insert")
 
         # TODO: Refactor the way we get output from subprocess
         # Run the command
@@ -281,68 +231,105 @@ class Terminal(Frame):
             stderr=PIPE,
             stdin=PIPE,
             text=True,
-            bufsize=1,
-            universal_newlines=True,
             cwd=getcwd(),  # TODO: use dynamtic path instead (see #35)
             creationflags=CREATE_NEW_CONSOLE,
         )
         # The following needs to be put in an after so the kill command works
 
         # Check if the command was successful
-        output: tuple = self.current_process.communicate()
-        returnlines: str = output[0]
-        errors: str = output[1]
+        returnlines: str = ""
+        errors: str = ""
+        returnlines, errors = self.current_process.communicate()
         returncode = self.current_process.returncode
         self.current_process = None
+
         if returncode != 0:
             returnlines += errors  # If the command was unsuccessful, it doesn't give stdout
         # TODO: Get the success message from the command (see #16)
+
         # Output to the text
         self.newline()
         for line in returnlines:
             self.text.insert("insert", line)
-            if line == "\n":
-                self.index += 1
 
         # Update the text and the index
+        self.index = int(self.text.index("insert").split(".")[0])
         self.update()
         return "break"  # Prevent the default newline character insertion
+
+    def newline(self) -> None:
+        """Insert a newline"""
+        self.text.insert("insert", "\n")
+        self.index += 1
+
+    def update(self) -> str:
+        """Update the text widget or the command has no output"""
+        # Make a newline
+        self.newline()
+        # Insert the directory
+        self.directory()
+        # Update cursor and check if it is out of the edit range
+        self.check(None)
+        # Update latest index
+        self.latest = self.text.index("insert")
+        # Warp to the end
+        self.text.see("end")
+        return "break"
+
+    # Keypress
+    def down(self, _: Event) -> str:
+        """Go down in the history"""
+        if self.historyindex < len(self.historys) - 1:
+            self.text.delete(f"{self.index}.0", "end-1c")
+            self.directory()
+            # Insert the command
+            self.text.insert("insert", self.historys[self.historyindex])
+            self.historyindex += 1
+        else:
+            # Clear the command
+            self.text.delete(f"{self.index}.0", "end-1c")
+            self.directory()
+        return "break"
+
+    def left(self, _: Event) -> str | None:
+        """Go left in the command if the command is greater than the path"""
+        insert_index = self.text.index("insert")
+        dir_index = f"{insert_index.split('.')[0]}.{len(getcwd() + SIGN)}"
+        if insert_index == dir_index:
+            del insert_index, dir_index
+            return "break"
+
+    def up(self, _: Event) -> str:
+        """Go up in the history"""
+        if self.historyindex >= 0:
+            self.text.delete(f"{self.index}.0", "end-1c")
+            self.directory()
+            # Insert the command
+            self.text.insert("insert", self.historys[self.historyindex])
+            self.historyindex -= 1
+        return "break"
 
 
 if __name__ == "__main__":
     from tkinter import Tk
 
-    # Create root window
     root = Tk()
-
-    # Hide root window during initialization
     root.withdraw()
-
-    # Set title
     root.title("Terminal")
 
-    # Create terminal
     term = Terminal(root)
     term.pack(expand=True, fill="both")
 
-    # Set minimum size and center app
-
-    # Update widgets so minimum size is accurate
     root.update_idletasks()
 
-    # Set the minimum size
     minimum_width: int = root.winfo_reqwidth()
     minimum_height: int = root.winfo_reqheight()
 
-    # Get center of screen based on minimum size
     x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
     y_coords = int(root.wm_maxsize()[1] / 2 - minimum_height / 2)
-    # Place app and make the minimum size the actual minimum size (non-infringable)
+
     root.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
     root.wm_minsize(minimum_width, minimum_height)
 
-    # Show root window
     root.deiconify()
-
-    # Start mainloop
     root.mainloop()
